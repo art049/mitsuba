@@ -39,9 +39,16 @@ RUN apt-get update \
     && apt-get autoclean \
     && apt-get autoremove
 
-### mitsuba git dependencies
+### mitsuba git opengl dependencies
 RUN apt-get update \
     && apt-get install -y \
-    cmake
+    cmake \
+    libgl1-mesa-dri \
+    x11-xserver-utils \
+    x11vnc \
+    xinit \
+    xserver-xorg-video-dummy \
+    xserver-xorg-input-void \
+    x11-apps
 
 WORKDIR /mitsuba
