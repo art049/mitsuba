@@ -143,7 +143,7 @@ print_app_output() {
 
 trap "docker stop $container >/dev/null && print_app_output" SIGINT SIGTERM
 
-#docker wait $container >/dev/null
+docker wait $container >/dev/null
 
 print_app_output
 

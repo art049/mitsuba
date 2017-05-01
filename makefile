@@ -1,5 +1,5 @@
 .PHONY: build
-build: Makefile
+build: Makefile dockerimage
 	docker run --rm \
 	-v $(shell pwd):/mitsuba \
 	-w /mitsuba \
