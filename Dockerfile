@@ -62,7 +62,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
 
 ### mitsuba git opengl dependencies
 RUN apt-get update \
-    && apt-get install -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     cmake \
     libgl1-mesa-dri \
     x11-xserver-utils \
@@ -71,6 +71,8 @@ RUN apt-get update \
     xserver-xorg-video-dummy \
     xserver-xorg-input-void \
     x11-apps mesa-utils
+
+
 
 COPY etc/skel/.xinitrc /etc/skel/.xinitrc
 RUN useradd -m -s /bin/bash user

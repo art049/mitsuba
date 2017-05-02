@@ -8,7 +8,7 @@ build: Makefile dockerimage
 
 .PHONY: webrun
 webrun: build
-	./run.sh -c mitsuba-web-gui -i mitsuba -r --env="APP=/mitsuba/binaries/mtsgui"
+	./run.sh -c mitsuba-web-gui -i mitsuba 
 
 .PHONY: interactive
 interactive:
