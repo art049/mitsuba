@@ -141,7 +141,7 @@ print_app_output() {
 	exit $result
 }
 
-trap "docker stop $container >/dev/null && print_app_output" SIGINT SIGTERM
+trap "docker kill $container >/dev/null && print_app_output" SIGINT SIGTERM
 
 docker wait $container >/dev/null
 
