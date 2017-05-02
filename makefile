@@ -8,7 +8,7 @@ build: Makefile dockerbuild.log
 
 .PHONY: webrun
 webrun: build
-	./run.sh -c mitsuba-web-gui -i mitsuba
+	./docker_env/run.sh -c mitsuba-web-gui -i mitsuba
 
 .PHONY: interactive
 interactive:
@@ -29,7 +29,7 @@ Makefile: CMakeLists.txt
 
 
 dockerbuild.log:
-	docker build -t mitsuba ./ | tee ./docker-build.log
+	docker build -t mitsuba ./docker_env/ | tee ./docker-build.log
 .PHONY: clean
 clean:
 	docker run --rm \
