@@ -1,5 +1,5 @@
 .PHONY: build
-build: Makefile dockerimage
+build: Makefile dockerbuild.log
 	docker run --rm \
 	-v $(shell pwd):/mitsuba \
 	-w /mitsuba \
@@ -8,7 +8,7 @@ build: Makefile dockerimage
 
 .PHONY: webrun
 webrun: build
-	./run.sh -c mitsuba-web-gui -i mitsuba 
+	./run.sh -c mitsuba-web-gui -i mitsuba
 
 .PHONY: interactive
 interactive:
@@ -27,8 +27,6 @@ Makefile: CMakeLists.txt
 	mitsuba \
 	sh -c 'cmake CMakeLists.txt'
 
-
-dockerimage: dockerbuild.log
 
 dockerbuild.log:
 	docker build -t mitsuba ./ | tee ./docker-build.log
