@@ -4,7 +4,7 @@ build: Makefile dockerbuild.log
 	-v $(shell pwd):/mitsuba \
 	-w /mitsuba \
 	mitsuba \
-	sh -c 'make --makefile=Makefile'
+	sh -c 'make -j4 --makefile=Makefile'
 
 .PHONY: webrun
 webrun: build

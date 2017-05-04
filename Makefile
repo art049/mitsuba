@@ -79,16 +79,6 @@ install/local: preinstall
 install/local/fast: install/local
 .PHONY : install/local/fast
 
-# Special rule for the target install/strip
-install/strip: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip
-
-# Special rule for the target install/strip
-install/strip/fast: install/strip
-.PHONY : install/strip/fast
-
 # Special rule for the target list_install_components
 list_install_components:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Developer\" \"Runtime\""
@@ -191,6 +181,11 @@ mitsuba-core/fast:
 	$(MAKE) -f src/libcore/CMakeFiles/mitsuba-core.dir/build.make src/libcore/CMakeFiles/mitsuba-core.dir/build
 .PHONY : mitsuba-core/fast
 
+# Manual pre-install relink rule for target.
+mitsuba-core/preinstall:
+	$(MAKE) -f src/libcore/CMakeFiles/mitsuba-core.dir/build.make src/libcore/CMakeFiles/mitsuba-core.dir/preinstall
+.PHONY : mitsuba-core/preinstall
+
 #=============================================================================
 # Target rules for targets named mitsuba-core_pch
 
@@ -216,6 +211,11 @@ mitsuba-render: cmake_check_build_system
 mitsuba-render/fast:
 	$(MAKE) -f src/librender/CMakeFiles/mitsuba-render.dir/build.make src/librender/CMakeFiles/mitsuba-render.dir/build
 .PHONY : mitsuba-render/fast
+
+# Manual pre-install relink rule for target.
+mitsuba-render/preinstall:
+	$(MAKE) -f src/librender/CMakeFiles/mitsuba-render.dir/build.make src/librender/CMakeFiles/mitsuba-render.dir/preinstall
+.PHONY : mitsuba-render/preinstall
 
 #=============================================================================
 # Target rules for targets named mitsuba-render_pch
@@ -243,6 +243,11 @@ mitsuba-hw/fast:
 	$(MAKE) -f src/libhw/CMakeFiles/mitsuba-hw.dir/build.make src/libhw/CMakeFiles/mitsuba-hw.dir/build
 .PHONY : mitsuba-hw/fast
 
+# Manual pre-install relink rule for target.
+mitsuba-hw/preinstall:
+	$(MAKE) -f src/libhw/CMakeFiles/mitsuba-hw.dir/build.make src/libhw/CMakeFiles/mitsuba-hw.dir/preinstall
+.PHONY : mitsuba-hw/preinstall
+
 #=============================================================================
 # Target rules for targets named mitsuba-hw_pch
 
@@ -268,6 +273,11 @@ mitsuba-bidir: cmake_check_build_system
 mitsuba-bidir/fast:
 	$(MAKE) -f src/libbidir/CMakeFiles/mitsuba-bidir.dir/build.make src/libbidir/CMakeFiles/mitsuba-bidir.dir/build
 .PHONY : mitsuba-bidir/fast
+
+# Manual pre-install relink rule for target.
+mitsuba-bidir/preinstall:
+	$(MAKE) -f src/libbidir/CMakeFiles/mitsuba-bidir.dir/build.make src/libbidir/CMakeFiles/mitsuba-bidir.dir/preinstall
+.PHONY : mitsuba-bidir/preinstall
 
 #=============================================================================
 # Target rules for targets named mitsuba-bidir_pch
@@ -295,6 +305,11 @@ PyMitsuba/fast:
 	$(MAKE) -f src/libpython/CMakeFiles/PyMitsuba.dir/build.make src/libpython/CMakeFiles/PyMitsuba.dir/build
 .PHONY : PyMitsuba/fast
 
+# Manual pre-install relink rule for target.
+PyMitsuba/preinstall:
+	$(MAKE) -f src/libpython/CMakeFiles/PyMitsuba.dir/build.make src/libpython/CMakeFiles/PyMitsuba.dir/preinstall
+.PHONY : PyMitsuba/preinstall
+
 #=============================================================================
 # Target rules for targets named mitsuba
 
@@ -307,6 +322,11 @@ mitsuba: cmake_check_build_system
 mitsuba/fast:
 	$(MAKE) -f src/mitsuba/CMakeFiles/mitsuba.dir/build.make src/mitsuba/CMakeFiles/mitsuba.dir/build
 .PHONY : mitsuba/fast
+
+# Manual pre-install relink rule for target.
+mitsuba/preinstall:
+	$(MAKE) -f src/mitsuba/CMakeFiles/mitsuba.dir/build.make src/mitsuba/CMakeFiles/mitsuba.dir/preinstall
+.PHONY : mitsuba/preinstall
 
 #=============================================================================
 # Target rules for targets named mitsuba_pch
@@ -334,6 +354,11 @@ mtssrv/fast:
 	$(MAKE) -f src/mitsuba/CMakeFiles/mtssrv.dir/build.make src/mitsuba/CMakeFiles/mtssrv.dir/build
 .PHONY : mtssrv/fast
 
+# Manual pre-install relink rule for target.
+mtssrv/preinstall:
+	$(MAKE) -f src/mitsuba/CMakeFiles/mtssrv.dir/build.make src/mitsuba/CMakeFiles/mtssrv.dir/preinstall
+.PHONY : mtssrv/preinstall
+
 #=============================================================================
 # Target rules for targets named mtssrv_pch
 
@@ -359,6 +384,11 @@ mtsutil: cmake_check_build_system
 mtsutil/fast:
 	$(MAKE) -f src/mitsuba/CMakeFiles/mtsutil.dir/build.make src/mitsuba/CMakeFiles/mtsutil.dir/build
 .PHONY : mtsutil/fast
+
+# Manual pre-install relink rule for target.
+mtsutil/preinstall:
+	$(MAKE) -f src/mitsuba/CMakeFiles/mtsutil.dir/build.make src/mitsuba/CMakeFiles/mtsutil.dir/preinstall
+.PHONY : mtsutil/preinstall
 
 #=============================================================================
 # Target rules for targets named mtsutil_pch
@@ -386,6 +416,11 @@ mtsgui/fast:
 	$(MAKE) -f src/mtsgui/CMakeFiles/mtsgui.dir/build.make src/mtsgui/CMakeFiles/mtsgui.dir/build
 .PHONY : mtsgui/fast
 
+# Manual pre-install relink rule for target.
+mtsgui/preinstall:
+	$(MAKE) -f src/mtsgui/CMakeFiles/mtsgui.dir/build.make src/mtsgui/CMakeFiles/mtsgui.dir/preinstall
+.PHONY : mtsgui/preinstall
+
 #=============================================================================
 # Target rules for targets named mtsgui_pch
 
@@ -411,6 +446,11 @@ test_simdtonemap: cmake_check_build_system
 test_simdtonemap/fast:
 	$(MAKE) -f src/mtsgui/CMakeFiles/test_simdtonemap.dir/build.make src/mtsgui/CMakeFiles/test_simdtonemap.dir/build
 .PHONY : test_simdtonemap/fast
+
+# Manual pre-install relink rule for target.
+test_simdtonemap/preinstall:
+	$(MAKE) -f src/mtsgui/CMakeFiles/test_simdtonemap.dir/build.make src/mtsgui/CMakeFiles/test_simdtonemap.dir/preinstall
+.PHONY : test_simdtonemap/preinstall
 
 #=============================================================================
 # Target rules for targets named test_simdtonemap_pch
@@ -438,6 +478,11 @@ addimages/fast:
 	$(MAKE) -f src/utils/CMakeFiles/addimages.dir/build.make src/utils/CMakeFiles/addimages.dir/build
 .PHONY : addimages/fast
 
+# Manual pre-install relink rule for target.
+addimages/preinstall:
+	$(MAKE) -f src/utils/CMakeFiles/addimages.dir/build.make src/utils/CMakeFiles/addimages.dir/preinstall
+.PHONY : addimages/preinstall
+
 #=============================================================================
 # Target rules for targets named cylclip
 
@@ -450,6 +495,11 @@ cylclip: cmake_check_build_system
 cylclip/fast:
 	$(MAKE) -f src/utils/CMakeFiles/cylclip.dir/build.make src/utils/CMakeFiles/cylclip.dir/build
 .PHONY : cylclip/fast
+
+# Manual pre-install relink rule for target.
+cylclip/preinstall:
+	$(MAKE) -f src/utils/CMakeFiles/cylclip.dir/build.make src/utils/CMakeFiles/cylclip.dir/preinstall
+.PHONY : cylclip/preinstall
 
 #=============================================================================
 # Target rules for targets named joinrgb
@@ -464,6 +514,11 @@ joinrgb/fast:
 	$(MAKE) -f src/utils/CMakeFiles/joinrgb.dir/build.make src/utils/CMakeFiles/joinrgb.dir/build
 .PHONY : joinrgb/fast
 
+# Manual pre-install relink rule for target.
+joinrgb/preinstall:
+	$(MAKE) -f src/utils/CMakeFiles/joinrgb.dir/build.make src/utils/CMakeFiles/joinrgb.dir/preinstall
+.PHONY : joinrgb/preinstall
+
 #=============================================================================
 # Target rules for targets named kdbench
 
@@ -476,6 +531,11 @@ kdbench: cmake_check_build_system
 kdbench/fast:
 	$(MAKE) -f src/utils/CMakeFiles/kdbench.dir/build.make src/utils/CMakeFiles/kdbench.dir/build
 .PHONY : kdbench/fast
+
+# Manual pre-install relink rule for target.
+kdbench/preinstall:
+	$(MAKE) -f src/utils/CMakeFiles/kdbench.dir/build.make src/utils/CMakeFiles/kdbench.dir/preinstall
+.PHONY : kdbench/preinstall
 
 #=============================================================================
 # Target rules for targets named tonemap
@@ -490,6 +550,11 @@ tonemap/fast:
 	$(MAKE) -f src/utils/CMakeFiles/tonemap.dir/build.make src/utils/CMakeFiles/tonemap.dir/build
 .PHONY : tonemap/fast
 
+# Manual pre-install relink rule for target.
+tonemap/preinstall:
+	$(MAKE) -f src/utils/CMakeFiles/tonemap.dir/build.make src/utils/CMakeFiles/tonemap.dir/preinstall
+.PHONY : tonemap/preinstall
+
 #=============================================================================
 # Target rules for targets named blendbsdf
 
@@ -502,6 +567,11 @@ blendbsdf: cmake_check_build_system
 blendbsdf/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/blendbsdf.dir/build.make src/bsdfs/CMakeFiles/blendbsdf.dir/build
 .PHONY : blendbsdf/fast
+
+# Manual pre-install relink rule for target.
+blendbsdf/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/blendbsdf.dir/build.make src/bsdfs/CMakeFiles/blendbsdf.dir/preinstall
+.PHONY : blendbsdf/preinstall
 
 #=============================================================================
 # Target rules for targets named bumpmap
@@ -516,6 +586,11 @@ bumpmap/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/bumpmap.dir/build.make src/bsdfs/CMakeFiles/bumpmap.dir/build
 .PHONY : bumpmap/fast
 
+# Manual pre-install relink rule for target.
+bumpmap/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/bumpmap.dir/build.make src/bsdfs/CMakeFiles/bumpmap.dir/preinstall
+.PHONY : bumpmap/preinstall
+
 #=============================================================================
 # Target rules for targets named coating
 
@@ -528,6 +603,11 @@ coating: cmake_check_build_system
 coating/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/coating.dir/build.make src/bsdfs/CMakeFiles/coating.dir/build
 .PHONY : coating/fast
+
+# Manual pre-install relink rule for target.
+coating/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/coating.dir/build.make src/bsdfs/CMakeFiles/coating.dir/preinstall
+.PHONY : coating/preinstall
 
 #=============================================================================
 # Target rules for targets named conductor
@@ -542,6 +622,11 @@ conductor/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/conductor.dir/build.make src/bsdfs/CMakeFiles/conductor.dir/build
 .PHONY : conductor/fast
 
+# Manual pre-install relink rule for target.
+conductor/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/conductor.dir/build.make src/bsdfs/CMakeFiles/conductor.dir/preinstall
+.PHONY : conductor/preinstall
+
 #=============================================================================
 # Target rules for targets named dielectric
 
@@ -554,6 +639,11 @@ dielectric: cmake_check_build_system
 dielectric/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/dielectric.dir/build.make src/bsdfs/CMakeFiles/dielectric.dir/build
 .PHONY : dielectric/fast
+
+# Manual pre-install relink rule for target.
+dielectric/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/dielectric.dir/build.make src/bsdfs/CMakeFiles/dielectric.dir/preinstall
+.PHONY : dielectric/preinstall
 
 #=============================================================================
 # Target rules for targets named difftrans
@@ -568,6 +658,11 @@ difftrans/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/difftrans.dir/build.make src/bsdfs/CMakeFiles/difftrans.dir/build
 .PHONY : difftrans/fast
 
+# Manual pre-install relink rule for target.
+difftrans/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/difftrans.dir/build.make src/bsdfs/CMakeFiles/difftrans.dir/preinstall
+.PHONY : difftrans/preinstall
+
 #=============================================================================
 # Target rules for targets named diffuse
 
@@ -580,6 +675,11 @@ diffuse: cmake_check_build_system
 diffuse/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/diffuse.dir/build.make src/bsdfs/CMakeFiles/diffuse.dir/build
 .PHONY : diffuse/fast
+
+# Manual pre-install relink rule for target.
+diffuse/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/diffuse.dir/build.make src/bsdfs/CMakeFiles/diffuse.dir/preinstall
+.PHONY : diffuse/preinstall
 
 #=============================================================================
 # Target rules for targets named hk
@@ -594,6 +694,11 @@ hk/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/hk.dir/build.make src/bsdfs/CMakeFiles/hk.dir/build
 .PHONY : hk/fast
 
+# Manual pre-install relink rule for target.
+hk/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/hk.dir/build.make src/bsdfs/CMakeFiles/hk.dir/preinstall
+.PHONY : hk/preinstall
+
 #=============================================================================
 # Target rules for targets named irawan
 
@@ -606,6 +711,11 @@ irawan: cmake_check_build_system
 irawan/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/irawan.dir/build.make src/bsdfs/CMakeFiles/irawan.dir/build
 .PHONY : irawan/fast
+
+# Manual pre-install relink rule for target.
+irawan/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/irawan.dir/build.make src/bsdfs/CMakeFiles/irawan.dir/preinstall
+.PHONY : irawan/preinstall
 
 #=============================================================================
 # Target rules for targets named mask
@@ -620,6 +730,11 @@ mask/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/mask.dir/build.make src/bsdfs/CMakeFiles/mask.dir/build
 .PHONY : mask/fast
 
+# Manual pre-install relink rule for target.
+mask/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/mask.dir/build.make src/bsdfs/CMakeFiles/mask.dir/preinstall
+.PHONY : mask/preinstall
+
 #=============================================================================
 # Target rules for targets named mixturebsdf
 
@@ -632,6 +747,11 @@ mixturebsdf: cmake_check_build_system
 mixturebsdf/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/mixturebsdf.dir/build.make src/bsdfs/CMakeFiles/mixturebsdf.dir/build
 .PHONY : mixturebsdf/fast
+
+# Manual pre-install relink rule for target.
+mixturebsdf/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/mixturebsdf.dir/build.make src/bsdfs/CMakeFiles/mixturebsdf.dir/preinstall
+.PHONY : mixturebsdf/preinstall
 
 #=============================================================================
 # Target rules for targets named normalmap
@@ -646,6 +766,11 @@ normalmap/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/normalmap.dir/build.make src/bsdfs/CMakeFiles/normalmap.dir/build
 .PHONY : normalmap/fast
 
+# Manual pre-install relink rule for target.
+normalmap/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/normalmap.dir/build.make src/bsdfs/CMakeFiles/normalmap.dir/preinstall
+.PHONY : normalmap/preinstall
+
 #=============================================================================
 # Target rules for targets named null
 
@@ -658,6 +783,11 @@ null: cmake_check_build_system
 null/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/null.dir/build.make src/bsdfs/CMakeFiles/null.dir/build
 .PHONY : null/fast
+
+# Manual pre-install relink rule for target.
+null/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/null.dir/build.make src/bsdfs/CMakeFiles/null.dir/preinstall
+.PHONY : null/preinstall
 
 #=============================================================================
 # Target rules for targets named phong
@@ -672,6 +802,11 @@ phong/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/phong.dir/build.make src/bsdfs/CMakeFiles/phong.dir/build
 .PHONY : phong/fast
 
+# Manual pre-install relink rule for target.
+phong/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/phong.dir/build.make src/bsdfs/CMakeFiles/phong.dir/preinstall
+.PHONY : phong/preinstall
+
 #=============================================================================
 # Target rules for targets named plastic
 
@@ -684,6 +819,11 @@ plastic: cmake_check_build_system
 plastic/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/plastic.dir/build.make src/bsdfs/CMakeFiles/plastic.dir/build
 .PHONY : plastic/fast
+
+# Manual pre-install relink rule for target.
+plastic/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/plastic.dir/build.make src/bsdfs/CMakeFiles/plastic.dir/preinstall
+.PHONY : plastic/preinstall
 
 #=============================================================================
 # Target rules for targets named roughcoating
@@ -698,6 +838,11 @@ roughcoating/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/roughcoating.dir/build.make src/bsdfs/CMakeFiles/roughcoating.dir/build
 .PHONY : roughcoating/fast
 
+# Manual pre-install relink rule for target.
+roughcoating/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/roughcoating.dir/build.make src/bsdfs/CMakeFiles/roughcoating.dir/preinstall
+.PHONY : roughcoating/preinstall
+
 #=============================================================================
 # Target rules for targets named roughconductor
 
@@ -710,6 +855,11 @@ roughconductor: cmake_check_build_system
 roughconductor/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/roughconductor.dir/build.make src/bsdfs/CMakeFiles/roughconductor.dir/build
 .PHONY : roughconductor/fast
+
+# Manual pre-install relink rule for target.
+roughconductor/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/roughconductor.dir/build.make src/bsdfs/CMakeFiles/roughconductor.dir/preinstall
+.PHONY : roughconductor/preinstall
 
 #=============================================================================
 # Target rules for targets named roughdielectric
@@ -724,6 +874,11 @@ roughdielectric/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/roughdielectric.dir/build.make src/bsdfs/CMakeFiles/roughdielectric.dir/build
 .PHONY : roughdielectric/fast
 
+# Manual pre-install relink rule for target.
+roughdielectric/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/roughdielectric.dir/build.make src/bsdfs/CMakeFiles/roughdielectric.dir/preinstall
+.PHONY : roughdielectric/preinstall
+
 #=============================================================================
 # Target rules for targets named roughdiffuse
 
@@ -736,6 +891,11 @@ roughdiffuse: cmake_check_build_system
 roughdiffuse/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/roughdiffuse.dir/build.make src/bsdfs/CMakeFiles/roughdiffuse.dir/build
 .PHONY : roughdiffuse/fast
+
+# Manual pre-install relink rule for target.
+roughdiffuse/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/roughdiffuse.dir/build.make src/bsdfs/CMakeFiles/roughdiffuse.dir/preinstall
+.PHONY : roughdiffuse/preinstall
 
 #=============================================================================
 # Target rules for targets named roughplastic
@@ -750,6 +910,11 @@ roughplastic/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/roughplastic.dir/build.make src/bsdfs/CMakeFiles/roughplastic.dir/build
 .PHONY : roughplastic/fast
 
+# Manual pre-install relink rule for target.
+roughplastic/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/roughplastic.dir/build.make src/bsdfs/CMakeFiles/roughplastic.dir/preinstall
+.PHONY : roughplastic/preinstall
+
 #=============================================================================
 # Target rules for targets named thindielectric
 
@@ -762,6 +927,11 @@ thindielectric: cmake_check_build_system
 thindielectric/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/thindielectric.dir/build.make src/bsdfs/CMakeFiles/thindielectric.dir/build
 .PHONY : thindielectric/fast
+
+# Manual pre-install relink rule for target.
+thindielectric/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/thindielectric.dir/build.make src/bsdfs/CMakeFiles/thindielectric.dir/preinstall
+.PHONY : thindielectric/preinstall
 
 #=============================================================================
 # Target rules for targets named twosided
@@ -776,6 +946,11 @@ twosided/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/twosided.dir/build.make src/bsdfs/CMakeFiles/twosided.dir/build
 .PHONY : twosided/fast
 
+# Manual pre-install relink rule for target.
+twosided/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/twosided.dir/build.make src/bsdfs/CMakeFiles/twosided.dir/preinstall
+.PHONY : twosided/preinstall
+
 #=============================================================================
 # Target rules for targets named ward
 
@@ -788,6 +963,11 @@ ward: cmake_check_build_system
 ward/fast:
 	$(MAKE) -f src/bsdfs/CMakeFiles/ward.dir/build.make src/bsdfs/CMakeFiles/ward.dir/build
 .PHONY : ward/fast
+
+# Manual pre-install relink rule for target.
+ward/preinstall:
+	$(MAKE) -f src/bsdfs/CMakeFiles/ward.dir/build.make src/bsdfs/CMakeFiles/ward.dir/preinstall
+.PHONY : ward/preinstall
 
 #=============================================================================
 # Target rules for targets named hg
@@ -802,6 +982,11 @@ hg/fast:
 	$(MAKE) -f src/phase/CMakeFiles/hg.dir/build.make src/phase/CMakeFiles/hg.dir/build
 .PHONY : hg/fast
 
+# Manual pre-install relink rule for target.
+hg/preinstall:
+	$(MAKE) -f src/phase/CMakeFiles/hg.dir/build.make src/phase/CMakeFiles/hg.dir/preinstall
+.PHONY : hg/preinstall
+
 #=============================================================================
 # Target rules for targets named isotropic
 
@@ -814,6 +999,11 @@ isotropic: cmake_check_build_system
 isotropic/fast:
 	$(MAKE) -f src/phase/CMakeFiles/isotropic.dir/build.make src/phase/CMakeFiles/isotropic.dir/build
 .PHONY : isotropic/fast
+
+# Manual pre-install relink rule for target.
+isotropic/preinstall:
+	$(MAKE) -f src/phase/CMakeFiles/isotropic.dir/build.make src/phase/CMakeFiles/isotropic.dir/preinstall
+.PHONY : isotropic/preinstall
 
 #=============================================================================
 # Target rules for targets named kkay
@@ -828,6 +1018,11 @@ kkay/fast:
 	$(MAKE) -f src/phase/CMakeFiles/kkay.dir/build.make src/phase/CMakeFiles/kkay.dir/build
 .PHONY : kkay/fast
 
+# Manual pre-install relink rule for target.
+kkay/preinstall:
+	$(MAKE) -f src/phase/CMakeFiles/kkay.dir/build.make src/phase/CMakeFiles/kkay.dir/preinstall
+.PHONY : kkay/preinstall
+
 #=============================================================================
 # Target rules for targets named microflake
 
@@ -840,6 +1035,11 @@ microflake: cmake_check_build_system
 microflake/fast:
 	$(MAKE) -f src/phase/CMakeFiles/microflake.dir/build.make src/phase/CMakeFiles/microflake.dir/build
 .PHONY : microflake/fast
+
+# Manual pre-install relink rule for target.
+microflake/preinstall:
+	$(MAKE) -f src/phase/CMakeFiles/microflake.dir/build.make src/phase/CMakeFiles/microflake.dir/preinstall
+.PHONY : microflake/preinstall
 
 #=============================================================================
 # Target rules for targets named mixturephase
@@ -854,6 +1054,11 @@ mixturephase/fast:
 	$(MAKE) -f src/phase/CMakeFiles/mixturephase.dir/build.make src/phase/CMakeFiles/mixturephase.dir/build
 .PHONY : mixturephase/fast
 
+# Manual pre-install relink rule for target.
+mixturephase/preinstall:
+	$(MAKE) -f src/phase/CMakeFiles/mixturephase.dir/build.make src/phase/CMakeFiles/mixturephase.dir/preinstall
+.PHONY : mixturephase/preinstall
+
 #=============================================================================
 # Target rules for targets named rayleigh
 
@@ -866,6 +1071,11 @@ rayleigh: cmake_check_build_system
 rayleigh/fast:
 	$(MAKE) -f src/phase/CMakeFiles/rayleigh.dir/build.make src/phase/CMakeFiles/rayleigh.dir/build
 .PHONY : rayleigh/fast
+
+# Manual pre-install relink rule for target.
+rayleigh/preinstall:
+	$(MAKE) -f src/phase/CMakeFiles/rayleigh.dir/build.make src/phase/CMakeFiles/rayleigh.dir/preinstall
+.PHONY : rayleigh/preinstall
 
 #=============================================================================
 # Target rules for targets named cube
@@ -880,6 +1090,11 @@ cube/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/cube.dir/build.make src/shapes/CMakeFiles/cube.dir/build
 .PHONY : cube/fast
 
+# Manual pre-install relink rule for target.
+cube/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/cube.dir/build.make src/shapes/CMakeFiles/cube.dir/preinstall
+.PHONY : cube/preinstall
+
 #=============================================================================
 # Target rules for targets named cylinder
 
@@ -892,6 +1107,11 @@ cylinder: cmake_check_build_system
 cylinder/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/cylinder.dir/build.make src/shapes/CMakeFiles/cylinder.dir/build
 .PHONY : cylinder/fast
+
+# Manual pre-install relink rule for target.
+cylinder/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/cylinder.dir/build.make src/shapes/CMakeFiles/cylinder.dir/preinstall
+.PHONY : cylinder/preinstall
 
 #=============================================================================
 # Target rules for targets named disk
@@ -906,6 +1126,11 @@ disk/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/disk.dir/build.make src/shapes/CMakeFiles/disk.dir/build
 .PHONY : disk/fast
 
+# Manual pre-install relink rule for target.
+disk/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/disk.dir/build.make src/shapes/CMakeFiles/disk.dir/preinstall
+.PHONY : disk/preinstall
+
 #=============================================================================
 # Target rules for targets named hair
 
@@ -918,6 +1143,11 @@ hair: cmake_check_build_system
 hair/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/hair.dir/build.make src/shapes/CMakeFiles/hair.dir/build
 .PHONY : hair/fast
+
+# Manual pre-install relink rule for target.
+hair/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/hair.dir/build.make src/shapes/CMakeFiles/hair.dir/preinstall
+.PHONY : hair/preinstall
 
 #=============================================================================
 # Target rules for targets named heightfield
@@ -932,6 +1162,11 @@ heightfield/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/heightfield.dir/build.make src/shapes/CMakeFiles/heightfield.dir/build
 .PHONY : heightfield/fast
 
+# Manual pre-install relink rule for target.
+heightfield/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/heightfield.dir/build.make src/shapes/CMakeFiles/heightfield.dir/preinstall
+.PHONY : heightfield/preinstall
+
 #=============================================================================
 # Target rules for targets named instance
 
@@ -944,6 +1179,11 @@ instance: cmake_check_build_system
 instance/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/instance.dir/build.make src/shapes/CMakeFiles/instance.dir/build
 .PHONY : instance/fast
+
+# Manual pre-install relink rule for target.
+instance/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/instance.dir/build.make src/shapes/CMakeFiles/instance.dir/preinstall
+.PHONY : instance/preinstall
 
 #=============================================================================
 # Target rules for targets named obj
@@ -958,6 +1198,11 @@ obj/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/obj.dir/build.make src/shapes/CMakeFiles/obj.dir/build
 .PHONY : obj/fast
 
+# Manual pre-install relink rule for target.
+obj/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/obj.dir/build.make src/shapes/CMakeFiles/obj.dir/preinstall
+.PHONY : obj/preinstall
+
 #=============================================================================
 # Target rules for targets named ply
 
@@ -970,6 +1215,11 @@ ply: cmake_check_build_system
 ply/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/ply.dir/build.make src/shapes/CMakeFiles/ply.dir/build
 .PHONY : ply/fast
+
+# Manual pre-install relink rule for target.
+ply/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/ply.dir/build.make src/shapes/CMakeFiles/ply.dir/preinstall
+.PHONY : ply/preinstall
 
 #=============================================================================
 # Target rules for targets named ply_pch
@@ -997,6 +1247,11 @@ rectangle/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/rectangle.dir/build.make src/shapes/CMakeFiles/rectangle.dir/build
 .PHONY : rectangle/fast
 
+# Manual pre-install relink rule for target.
+rectangle/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/rectangle.dir/build.make src/shapes/CMakeFiles/rectangle.dir/preinstall
+.PHONY : rectangle/preinstall
+
 #=============================================================================
 # Target rules for targets named serialized
 
@@ -1009,6 +1264,11 @@ serialized: cmake_check_build_system
 serialized/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/serialized.dir/build.make src/shapes/CMakeFiles/serialized.dir/build
 .PHONY : serialized/fast
+
+# Manual pre-install relink rule for target.
+serialized/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/serialized.dir/build.make src/shapes/CMakeFiles/serialized.dir/preinstall
+.PHONY : serialized/preinstall
 
 #=============================================================================
 # Target rules for targets named shapegroup
@@ -1023,6 +1283,11 @@ shapegroup/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/shapegroup.dir/build.make src/shapes/CMakeFiles/shapegroup.dir/build
 .PHONY : shapegroup/fast
 
+# Manual pre-install relink rule for target.
+shapegroup/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/shapegroup.dir/build.make src/shapes/CMakeFiles/shapegroup.dir/preinstall
+.PHONY : shapegroup/preinstall
+
 #=============================================================================
 # Target rules for targets named sphere
 
@@ -1036,6 +1301,11 @@ sphere/fast:
 	$(MAKE) -f src/shapes/CMakeFiles/sphere.dir/build.make src/shapes/CMakeFiles/sphere.dir/build
 .PHONY : sphere/fast
 
+# Manual pre-install relink rule for target.
+sphere/preinstall:
+	$(MAKE) -f src/shapes/CMakeFiles/sphere.dir/build.make src/shapes/CMakeFiles/sphere.dir/preinstall
+.PHONY : sphere/preinstall
+
 #=============================================================================
 # Target rules for targets named halton
 
@@ -1048,6 +1318,11 @@ halton: cmake_check_build_system
 halton/fast:
 	$(MAKE) -f src/samplers/CMakeFiles/halton.dir/build.make src/samplers/CMakeFiles/halton.dir/build
 .PHONY : halton/fast
+
+# Manual pre-install relink rule for target.
+halton/preinstall:
+	$(MAKE) -f src/samplers/CMakeFiles/halton.dir/build.make src/samplers/CMakeFiles/halton.dir/preinstall
+.PHONY : halton/preinstall
 
 #=============================================================================
 # Target rules for targets named halton_pch
@@ -1075,6 +1350,11 @@ hammersley/fast:
 	$(MAKE) -f src/samplers/CMakeFiles/hammersley.dir/build.make src/samplers/CMakeFiles/hammersley.dir/build
 .PHONY : hammersley/fast
 
+# Manual pre-install relink rule for target.
+hammersley/preinstall:
+	$(MAKE) -f src/samplers/CMakeFiles/hammersley.dir/build.make src/samplers/CMakeFiles/hammersley.dir/preinstall
+.PHONY : hammersley/preinstall
+
 #=============================================================================
 # Target rules for targets named hammersley_pch
 
@@ -1101,6 +1381,11 @@ independent/fast:
 	$(MAKE) -f src/samplers/CMakeFiles/independent.dir/build.make src/samplers/CMakeFiles/independent.dir/build
 .PHONY : independent/fast
 
+# Manual pre-install relink rule for target.
+independent/preinstall:
+	$(MAKE) -f src/samplers/CMakeFiles/independent.dir/build.make src/samplers/CMakeFiles/independent.dir/preinstall
+.PHONY : independent/preinstall
+
 #=============================================================================
 # Target rules for targets named ldsampler
 
@@ -1114,6 +1399,11 @@ ldsampler/fast:
 	$(MAKE) -f src/samplers/CMakeFiles/ldsampler.dir/build.make src/samplers/CMakeFiles/ldsampler.dir/build
 .PHONY : ldsampler/fast
 
+# Manual pre-install relink rule for target.
+ldsampler/preinstall:
+	$(MAKE) -f src/samplers/CMakeFiles/ldsampler.dir/build.make src/samplers/CMakeFiles/ldsampler.dir/preinstall
+.PHONY : ldsampler/preinstall
+
 #=============================================================================
 # Target rules for targets named sobol
 
@@ -1126,6 +1416,11 @@ sobol: cmake_check_build_system
 sobol/fast:
 	$(MAKE) -f src/samplers/CMakeFiles/sobol.dir/build.make src/samplers/CMakeFiles/sobol.dir/build
 .PHONY : sobol/fast
+
+# Manual pre-install relink rule for target.
+sobol/preinstall:
+	$(MAKE) -f src/samplers/CMakeFiles/sobol.dir/build.make src/samplers/CMakeFiles/sobol.dir/preinstall
+.PHONY : sobol/preinstall
 
 #=============================================================================
 # Target rules for targets named sobol_pch
@@ -1153,6 +1448,11 @@ stratified/fast:
 	$(MAKE) -f src/samplers/CMakeFiles/stratified.dir/build.make src/samplers/CMakeFiles/stratified.dir/build
 .PHONY : stratified/fast
 
+# Manual pre-install relink rule for target.
+stratified/preinstall:
+	$(MAKE) -f src/samplers/CMakeFiles/stratified.dir/build.make src/samplers/CMakeFiles/stratified.dir/preinstall
+.PHONY : stratified/preinstall
+
 #=============================================================================
 # Target rules for targets named box
 
@@ -1165,6 +1465,11 @@ box: cmake_check_build_system
 box/fast:
 	$(MAKE) -f src/rfilters/CMakeFiles/box.dir/build.make src/rfilters/CMakeFiles/box.dir/build
 .PHONY : box/fast
+
+# Manual pre-install relink rule for target.
+box/preinstall:
+	$(MAKE) -f src/rfilters/CMakeFiles/box.dir/build.make src/rfilters/CMakeFiles/box.dir/preinstall
+.PHONY : box/preinstall
 
 #=============================================================================
 # Target rules for targets named catmullrom
@@ -1179,6 +1484,11 @@ catmullrom/fast:
 	$(MAKE) -f src/rfilters/CMakeFiles/catmullrom.dir/build.make src/rfilters/CMakeFiles/catmullrom.dir/build
 .PHONY : catmullrom/fast
 
+# Manual pre-install relink rule for target.
+catmullrom/preinstall:
+	$(MAKE) -f src/rfilters/CMakeFiles/catmullrom.dir/build.make src/rfilters/CMakeFiles/catmullrom.dir/preinstall
+.PHONY : catmullrom/preinstall
+
 #=============================================================================
 # Target rules for targets named gaussian
 
@@ -1191,6 +1501,11 @@ gaussian: cmake_check_build_system
 gaussian/fast:
 	$(MAKE) -f src/rfilters/CMakeFiles/gaussian.dir/build.make src/rfilters/CMakeFiles/gaussian.dir/build
 .PHONY : gaussian/fast
+
+# Manual pre-install relink rule for target.
+gaussian/preinstall:
+	$(MAKE) -f src/rfilters/CMakeFiles/gaussian.dir/build.make src/rfilters/CMakeFiles/gaussian.dir/preinstall
+.PHONY : gaussian/preinstall
 
 #=============================================================================
 # Target rules for targets named lanczos
@@ -1205,6 +1520,11 @@ lanczos/fast:
 	$(MAKE) -f src/rfilters/CMakeFiles/lanczos.dir/build.make src/rfilters/CMakeFiles/lanczos.dir/build
 .PHONY : lanczos/fast
 
+# Manual pre-install relink rule for target.
+lanczos/preinstall:
+	$(MAKE) -f src/rfilters/CMakeFiles/lanczos.dir/build.make src/rfilters/CMakeFiles/lanczos.dir/preinstall
+.PHONY : lanczos/preinstall
+
 #=============================================================================
 # Target rules for targets named mitchell
 
@@ -1217,6 +1537,11 @@ mitchell: cmake_check_build_system
 mitchell/fast:
 	$(MAKE) -f src/rfilters/CMakeFiles/mitchell.dir/build.make src/rfilters/CMakeFiles/mitchell.dir/build
 .PHONY : mitchell/fast
+
+# Manual pre-install relink rule for target.
+mitchell/preinstall:
+	$(MAKE) -f src/rfilters/CMakeFiles/mitchell.dir/build.make src/rfilters/CMakeFiles/mitchell.dir/preinstall
+.PHONY : mitchell/preinstall
 
 #=============================================================================
 # Target rules for targets named tent
@@ -1231,6 +1556,11 @@ tent/fast:
 	$(MAKE) -f src/rfilters/CMakeFiles/tent.dir/build.make src/rfilters/CMakeFiles/tent.dir/build
 .PHONY : tent/fast
 
+# Manual pre-install relink rule for target.
+tent/preinstall:
+	$(MAKE) -f src/rfilters/CMakeFiles/tent.dir/build.make src/rfilters/CMakeFiles/tent.dir/preinstall
+.PHONY : tent/preinstall
+
 #=============================================================================
 # Target rules for targets named hdrfilm
 
@@ -1243,6 +1573,11 @@ hdrfilm: cmake_check_build_system
 hdrfilm/fast:
 	$(MAKE) -f src/films/CMakeFiles/hdrfilm.dir/build.make src/films/CMakeFiles/hdrfilm.dir/build
 .PHONY : hdrfilm/fast
+
+# Manual pre-install relink rule for target.
+hdrfilm/preinstall:
+	$(MAKE) -f src/films/CMakeFiles/hdrfilm.dir/build.make src/films/CMakeFiles/hdrfilm.dir/preinstall
+.PHONY : hdrfilm/preinstall
 
 #=============================================================================
 # Target rules for targets named ldrfilm
@@ -1257,6 +1592,11 @@ ldrfilm/fast:
 	$(MAKE) -f src/films/CMakeFiles/ldrfilm.dir/build.make src/films/CMakeFiles/ldrfilm.dir/build
 .PHONY : ldrfilm/fast
 
+# Manual pre-install relink rule for target.
+ldrfilm/preinstall:
+	$(MAKE) -f src/films/CMakeFiles/ldrfilm.dir/build.make src/films/CMakeFiles/ldrfilm.dir/preinstall
+.PHONY : ldrfilm/preinstall
+
 #=============================================================================
 # Target rules for targets named mfilm
 
@@ -1269,6 +1609,11 @@ mfilm: cmake_check_build_system
 mfilm/fast:
 	$(MAKE) -f src/films/CMakeFiles/mfilm.dir/build.make src/films/CMakeFiles/mfilm.dir/build
 .PHONY : mfilm/fast
+
+# Manual pre-install relink rule for target.
+mfilm/preinstall:
+	$(MAKE) -f src/films/CMakeFiles/mfilm.dir/build.make src/films/CMakeFiles/mfilm.dir/preinstall
+.PHONY : mfilm/preinstall
 
 #=============================================================================
 # Target rules for targets named mfilm_pch
@@ -1296,6 +1641,11 @@ tiledhdrfilm/fast:
 	$(MAKE) -f src/films/CMakeFiles/tiledhdrfilm.dir/build.make src/films/CMakeFiles/tiledhdrfilm.dir/build
 .PHONY : tiledhdrfilm/fast
 
+# Manual pre-install relink rule for target.
+tiledhdrfilm/preinstall:
+	$(MAKE) -f src/films/CMakeFiles/tiledhdrfilm.dir/build.make src/films/CMakeFiles/tiledhdrfilm.dir/preinstall
+.PHONY : tiledhdrfilm/preinstall
+
 #=============================================================================
 # Target rules for targets named fluencemeter
 
@@ -1308,6 +1658,11 @@ fluencemeter: cmake_check_build_system
 fluencemeter/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/fluencemeter.dir/build.make src/sensors/CMakeFiles/fluencemeter.dir/build
 .PHONY : fluencemeter/fast
+
+# Manual pre-install relink rule for target.
+fluencemeter/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/fluencemeter.dir/build.make src/sensors/CMakeFiles/fluencemeter.dir/preinstall
+.PHONY : fluencemeter/preinstall
 
 #=============================================================================
 # Target rules for targets named irradiancemeter
@@ -1322,6 +1677,11 @@ irradiancemeter/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/irradiancemeter.dir/build.make src/sensors/CMakeFiles/irradiancemeter.dir/build
 .PHONY : irradiancemeter/fast
 
+# Manual pre-install relink rule for target.
+irradiancemeter/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/irradiancemeter.dir/build.make src/sensors/CMakeFiles/irradiancemeter.dir/preinstall
+.PHONY : irradiancemeter/preinstall
+
 #=============================================================================
 # Target rules for targets named orthographic
 
@@ -1334,6 +1694,11 @@ orthographic: cmake_check_build_system
 orthographic/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/orthographic.dir/build.make src/sensors/CMakeFiles/orthographic.dir/build
 .PHONY : orthographic/fast
+
+# Manual pre-install relink rule for target.
+orthographic/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/orthographic.dir/build.make src/sensors/CMakeFiles/orthographic.dir/preinstall
+.PHONY : orthographic/preinstall
 
 #=============================================================================
 # Target rules for targets named perspective
@@ -1348,6 +1713,11 @@ perspective/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/perspective.dir/build.make src/sensors/CMakeFiles/perspective.dir/build
 .PHONY : perspective/fast
 
+# Manual pre-install relink rule for target.
+perspective/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/perspective.dir/build.make src/sensors/CMakeFiles/perspective.dir/preinstall
+.PHONY : perspective/preinstall
+
 #=============================================================================
 # Target rules for targets named perspective_rdist
 
@@ -1360,6 +1730,11 @@ perspective_rdist: cmake_check_build_system
 perspective_rdist/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/perspective_rdist.dir/build.make src/sensors/CMakeFiles/perspective_rdist.dir/build
 .PHONY : perspective_rdist/fast
+
+# Manual pre-install relink rule for target.
+perspective_rdist/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/perspective_rdist.dir/build.make src/sensors/CMakeFiles/perspective_rdist.dir/preinstall
+.PHONY : perspective_rdist/preinstall
 
 #=============================================================================
 # Target rules for targets named radiancemeter
@@ -1374,6 +1749,11 @@ radiancemeter/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/radiancemeter.dir/build.make src/sensors/CMakeFiles/radiancemeter.dir/build
 .PHONY : radiancemeter/fast
 
+# Manual pre-install relink rule for target.
+radiancemeter/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/radiancemeter.dir/build.make src/sensors/CMakeFiles/radiancemeter.dir/preinstall
+.PHONY : radiancemeter/preinstall
+
 #=============================================================================
 # Target rules for targets named spherical
 
@@ -1386,6 +1766,11 @@ spherical: cmake_check_build_system
 spherical/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/spherical.dir/build.make src/sensors/CMakeFiles/spherical.dir/build
 .PHONY : spherical/fast
+
+# Manual pre-install relink rule for target.
+spherical/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/spherical.dir/build.make src/sensors/CMakeFiles/spherical.dir/preinstall
+.PHONY : spherical/preinstall
 
 #=============================================================================
 # Target rules for targets named telecentric
@@ -1400,6 +1785,11 @@ telecentric/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/telecentric.dir/build.make src/sensors/CMakeFiles/telecentric.dir/build
 .PHONY : telecentric/fast
 
+# Manual pre-install relink rule for target.
+telecentric/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/telecentric.dir/build.make src/sensors/CMakeFiles/telecentric.dir/preinstall
+.PHONY : telecentric/preinstall
+
 #=============================================================================
 # Target rules for targets named thinlens
 
@@ -1412,6 +1802,11 @@ thinlens: cmake_check_build_system
 thinlens/fast:
 	$(MAKE) -f src/sensors/CMakeFiles/thinlens.dir/build.make src/sensors/CMakeFiles/thinlens.dir/build
 .PHONY : thinlens/fast
+
+# Manual pre-install relink rule for target.
+thinlens/preinstall:
+	$(MAKE) -f src/sensors/CMakeFiles/thinlens.dir/build.make src/sensors/CMakeFiles/thinlens.dir/preinstall
+.PHONY : thinlens/preinstall
 
 #=============================================================================
 # Target rules for targets named area
@@ -1426,6 +1821,11 @@ area/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/area.dir/build.make src/emitters/CMakeFiles/area.dir/build
 .PHONY : area/fast
 
+# Manual pre-install relink rule for target.
+area/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/area.dir/build.make src/emitters/CMakeFiles/area.dir/preinstall
+.PHONY : area/preinstall
+
 #=============================================================================
 # Target rules for targets named collimated
 
@@ -1438,6 +1838,11 @@ collimated: cmake_check_build_system
 collimated/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/collimated.dir/build.make src/emitters/CMakeFiles/collimated.dir/build
 .PHONY : collimated/fast
+
+# Manual pre-install relink rule for target.
+collimated/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/collimated.dir/build.make src/emitters/CMakeFiles/collimated.dir/preinstall
+.PHONY : collimated/preinstall
 
 #=============================================================================
 # Target rules for targets named constant
@@ -1452,6 +1857,11 @@ constant/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/constant.dir/build.make src/emitters/CMakeFiles/constant.dir/build
 .PHONY : constant/fast
 
+# Manual pre-install relink rule for target.
+constant/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/constant.dir/build.make src/emitters/CMakeFiles/constant.dir/preinstall
+.PHONY : constant/preinstall
+
 #=============================================================================
 # Target rules for targets named directional
 
@@ -1464,6 +1874,11 @@ directional: cmake_check_build_system
 directional/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/directional.dir/build.make src/emitters/CMakeFiles/directional.dir/build
 .PHONY : directional/fast
+
+# Manual pre-install relink rule for target.
+directional/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/directional.dir/build.make src/emitters/CMakeFiles/directional.dir/preinstall
+.PHONY : directional/preinstall
 
 #=============================================================================
 # Target rules for targets named envmap
@@ -1478,6 +1893,11 @@ envmap/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/envmap.dir/build.make src/emitters/CMakeFiles/envmap.dir/build
 .PHONY : envmap/fast
 
+# Manual pre-install relink rule for target.
+envmap/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/envmap.dir/build.make src/emitters/CMakeFiles/envmap.dir/preinstall
+.PHONY : envmap/preinstall
+
 #=============================================================================
 # Target rules for targets named point
 
@@ -1491,6 +1911,11 @@ point/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/point.dir/build.make src/emitters/CMakeFiles/point.dir/build
 .PHONY : point/fast
 
+# Manual pre-install relink rule for target.
+point/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/point.dir/build.make src/emitters/CMakeFiles/point.dir/preinstall
+.PHONY : point/preinstall
+
 #=============================================================================
 # Target rules for targets named sky
 
@@ -1503,6 +1928,11 @@ sky: cmake_check_build_system
 sky/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/sky.dir/build.make src/emitters/CMakeFiles/sky.dir/build
 .PHONY : sky/fast
+
+# Manual pre-install relink rule for target.
+sky/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/sky.dir/build.make src/emitters/CMakeFiles/sky.dir/preinstall
+.PHONY : sky/preinstall
 
 #=============================================================================
 # Target rules for targets named sky_pch
@@ -1530,6 +1960,11 @@ spot/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/spot.dir/build.make src/emitters/CMakeFiles/spot.dir/build
 .PHONY : spot/fast
 
+# Manual pre-install relink rule for target.
+spot/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/spot.dir/build.make src/emitters/CMakeFiles/spot.dir/preinstall
+.PHONY : spot/preinstall
+
 #=============================================================================
 # Target rules for targets named sun
 
@@ -1542,6 +1977,11 @@ sun: cmake_check_build_system
 sun/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/sun.dir/build.make src/emitters/CMakeFiles/sun.dir/build
 .PHONY : sun/fast
+
+# Manual pre-install relink rule for target.
+sun/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/sun.dir/build.make src/emitters/CMakeFiles/sun.dir/preinstall
+.PHONY : sun/preinstall
 
 #=============================================================================
 # Target rules for targets named sunsky
@@ -1556,6 +1996,11 @@ sunsky/fast:
 	$(MAKE) -f src/emitters/CMakeFiles/sunsky.dir/build.make src/emitters/CMakeFiles/sunsky.dir/build
 .PHONY : sunsky/fast
 
+# Manual pre-install relink rule for target.
+sunsky/preinstall:
+	$(MAKE) -f src/emitters/CMakeFiles/sunsky.dir/build.make src/emitters/CMakeFiles/sunsky.dir/preinstall
+.PHONY : sunsky/preinstall
+
 #=============================================================================
 # Target rules for targets named heterogeneous
 
@@ -1568,6 +2013,11 @@ heterogeneous: cmake_check_build_system
 heterogeneous/fast:
 	$(MAKE) -f src/medium/CMakeFiles/heterogeneous.dir/build.make src/medium/CMakeFiles/heterogeneous.dir/build
 .PHONY : heterogeneous/fast
+
+# Manual pre-install relink rule for target.
+heterogeneous/preinstall:
+	$(MAKE) -f src/medium/CMakeFiles/heterogeneous.dir/build.make src/medium/CMakeFiles/heterogeneous.dir/preinstall
+.PHONY : heterogeneous/preinstall
 
 #=============================================================================
 # Target rules for targets named homogeneous
@@ -1582,6 +2032,11 @@ homogeneous/fast:
 	$(MAKE) -f src/medium/CMakeFiles/homogeneous.dir/build.make src/medium/CMakeFiles/homogeneous.dir/build
 .PHONY : homogeneous/fast
 
+# Manual pre-install relink rule for target.
+homogeneous/preinstall:
+	$(MAKE) -f src/medium/CMakeFiles/homogeneous.dir/build.make src/medium/CMakeFiles/homogeneous.dir/preinstall
+.PHONY : homogeneous/preinstall
+
 #=============================================================================
 # Target rules for targets named constvolume
 
@@ -1594,6 +2049,11 @@ constvolume: cmake_check_build_system
 constvolume/fast:
 	$(MAKE) -f src/volume/CMakeFiles/constvolume.dir/build.make src/volume/CMakeFiles/constvolume.dir/build
 .PHONY : constvolume/fast
+
+# Manual pre-install relink rule for target.
+constvolume/preinstall:
+	$(MAKE) -f src/volume/CMakeFiles/constvolume.dir/build.make src/volume/CMakeFiles/constvolume.dir/preinstall
+.PHONY : constvolume/preinstall
 
 #=============================================================================
 # Target rules for targets named gridvolume
@@ -1608,6 +2068,11 @@ gridvolume/fast:
 	$(MAKE) -f src/volume/CMakeFiles/gridvolume.dir/build.make src/volume/CMakeFiles/gridvolume.dir/build
 .PHONY : gridvolume/fast
 
+# Manual pre-install relink rule for target.
+gridvolume/preinstall:
+	$(MAKE) -f src/volume/CMakeFiles/gridvolume.dir/build.make src/volume/CMakeFiles/gridvolume.dir/preinstall
+.PHONY : gridvolume/preinstall
+
 #=============================================================================
 # Target rules for targets named hgridvolume
 
@@ -1620,6 +2085,11 @@ hgridvolume: cmake_check_build_system
 hgridvolume/fast:
 	$(MAKE) -f src/volume/CMakeFiles/hgridvolume.dir/build.make src/volume/CMakeFiles/hgridvolume.dir/build
 .PHONY : hgridvolume/fast
+
+# Manual pre-install relink rule for target.
+hgridvolume/preinstall:
+	$(MAKE) -f src/volume/CMakeFiles/hgridvolume.dir/build.make src/volume/CMakeFiles/hgridvolume.dir/preinstall
+.PHONY : hgridvolume/preinstall
 
 #=============================================================================
 # Target rules for targets named volcache
@@ -1634,6 +2104,11 @@ volcache/fast:
 	$(MAKE) -f src/volume/CMakeFiles/volcache.dir/build.make src/volume/CMakeFiles/volcache.dir/build
 .PHONY : volcache/fast
 
+# Manual pre-install relink rule for target.
+volcache/preinstall:
+	$(MAKE) -f src/volume/CMakeFiles/volcache.dir/build.make src/volume/CMakeFiles/volcache.dir/preinstall
+.PHONY : volcache/preinstall
+
 #=============================================================================
 # Target rules for targets named dipole
 
@@ -1646,6 +2121,11 @@ dipole: cmake_check_build_system
 dipole/fast:
 	$(MAKE) -f src/subsurface/CMakeFiles/dipole.dir/build.make src/subsurface/CMakeFiles/dipole.dir/build
 .PHONY : dipole/fast
+
+# Manual pre-install relink rule for target.
+dipole/preinstall:
+	$(MAKE) -f src/subsurface/CMakeFiles/dipole.dir/build.make src/subsurface/CMakeFiles/dipole.dir/preinstall
+.PHONY : dipole/preinstall
 
 #=============================================================================
 # Target rules for targets named dipole_pch
@@ -1673,6 +2153,11 @@ bitmap/fast:
 	$(MAKE) -f src/textures/CMakeFiles/bitmap.dir/build.make src/textures/CMakeFiles/bitmap.dir/build
 .PHONY : bitmap/fast
 
+# Manual pre-install relink rule for target.
+bitmap/preinstall:
+	$(MAKE) -f src/textures/CMakeFiles/bitmap.dir/build.make src/textures/CMakeFiles/bitmap.dir/preinstall
+.PHONY : bitmap/preinstall
+
 #=============================================================================
 # Target rules for targets named checkerboard
 
@@ -1685,6 +2170,11 @@ checkerboard: cmake_check_build_system
 checkerboard/fast:
 	$(MAKE) -f src/textures/CMakeFiles/checkerboard.dir/build.make src/textures/CMakeFiles/checkerboard.dir/build
 .PHONY : checkerboard/fast
+
+# Manual pre-install relink rule for target.
+checkerboard/preinstall:
+	$(MAKE) -f src/textures/CMakeFiles/checkerboard.dir/build.make src/textures/CMakeFiles/checkerboard.dir/preinstall
+.PHONY : checkerboard/preinstall
 
 #=============================================================================
 # Target rules for targets named curvature
@@ -1699,6 +2189,11 @@ curvature/fast:
 	$(MAKE) -f src/textures/CMakeFiles/curvature.dir/build.make src/textures/CMakeFiles/curvature.dir/build
 .PHONY : curvature/fast
 
+# Manual pre-install relink rule for target.
+curvature/preinstall:
+	$(MAKE) -f src/textures/CMakeFiles/curvature.dir/build.make src/textures/CMakeFiles/curvature.dir/preinstall
+.PHONY : curvature/preinstall
+
 #=============================================================================
 # Target rules for targets named gridtexture
 
@@ -1711,6 +2206,11 @@ gridtexture: cmake_check_build_system
 gridtexture/fast:
 	$(MAKE) -f src/textures/CMakeFiles/gridtexture.dir/build.make src/textures/CMakeFiles/gridtexture.dir/build
 .PHONY : gridtexture/fast
+
+# Manual pre-install relink rule for target.
+gridtexture/preinstall:
+	$(MAKE) -f src/textures/CMakeFiles/gridtexture.dir/build.make src/textures/CMakeFiles/gridtexture.dir/preinstall
+.PHONY : gridtexture/preinstall
 
 #=============================================================================
 # Target rules for targets named scale
@@ -1725,6 +2225,11 @@ scale/fast:
 	$(MAKE) -f src/textures/CMakeFiles/scale.dir/build.make src/textures/CMakeFiles/scale.dir/build
 .PHONY : scale/fast
 
+# Manual pre-install relink rule for target.
+scale/preinstall:
+	$(MAKE) -f src/textures/CMakeFiles/scale.dir/build.make src/textures/CMakeFiles/scale.dir/preinstall
+.PHONY : scale/preinstall
+
 #=============================================================================
 # Target rules for targets named vertexcolors
 
@@ -1737,6 +2242,11 @@ vertexcolors: cmake_check_build_system
 vertexcolors/fast:
 	$(MAKE) -f src/textures/CMakeFiles/vertexcolors.dir/build.make src/textures/CMakeFiles/vertexcolors.dir/build
 .PHONY : vertexcolors/fast
+
+# Manual pre-install relink rule for target.
+vertexcolors/preinstall:
+	$(MAKE) -f src/textures/CMakeFiles/vertexcolors.dir/build.make src/textures/CMakeFiles/vertexcolors.dir/preinstall
+.PHONY : vertexcolors/preinstall
 
 #=============================================================================
 # Target rules for targets named wireframe
@@ -1751,6 +2261,11 @@ wireframe/fast:
 	$(MAKE) -f src/textures/CMakeFiles/wireframe.dir/build.make src/textures/CMakeFiles/wireframe.dir/build
 .PHONY : wireframe/fast
 
+# Manual pre-install relink rule for target.
+wireframe/preinstall:
+	$(MAKE) -f src/textures/CMakeFiles/wireframe.dir/build.make src/textures/CMakeFiles/wireframe.dir/preinstall
+.PHONY : wireframe/preinstall
+
 #=============================================================================
 # Target rules for targets named adaptive
 
@@ -1763,6 +2278,11 @@ adaptive: cmake_check_build_system
 adaptive/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/adaptive.dir/build.make src/integrators/CMakeFiles/adaptive.dir/build
 .PHONY : adaptive/fast
+
+# Manual pre-install relink rule for target.
+adaptive/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/adaptive.dir/build.make src/integrators/CMakeFiles/adaptive.dir/preinstall
+.PHONY : adaptive/preinstall
 
 #=============================================================================
 # Target rules for targets named ao
@@ -1777,6 +2297,11 @@ ao/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/ao.dir/build.make src/integrators/CMakeFiles/ao.dir/build
 .PHONY : ao/fast
 
+# Manual pre-install relink rule for target.
+ao/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/ao.dir/build.make src/integrators/CMakeFiles/ao.dir/preinstall
+.PHONY : ao/preinstall
+
 #=============================================================================
 # Target rules for targets named bdpt
 
@@ -1789,6 +2314,11 @@ bdpt: cmake_check_build_system
 bdpt/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/bdpt.dir/build.make src/integrators/CMakeFiles/bdpt.dir/build
 .PHONY : bdpt/fast
+
+# Manual pre-install relink rule for target.
+bdpt/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/bdpt.dir/build.make src/integrators/CMakeFiles/bdpt.dir/preinstall
+.PHONY : bdpt/preinstall
 
 #=============================================================================
 # Target rules for targets named bdpt_pch
@@ -1816,6 +2346,29 @@ direct/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/direct.dir/build.make src/integrators/CMakeFiles/direct.dir/build
 .PHONY : direct/fast
 
+# Manual pre-install relink rule for target.
+direct/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/direct.dir/build.make src/integrators/CMakeFiles/direct.dir/preinstall
+.PHONY : direct/preinstall
+
+#=============================================================================
+# Target rules for targets named dosppm
+
+# Build rule for target.
+dosppm: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 dosppm
+.PHONY : dosppm
+
+# fast build rule for target.
+dosppm/fast:
+	$(MAKE) -f src/integrators/CMakeFiles/dosppm.dir/build.make src/integrators/CMakeFiles/dosppm.dir/build
+.PHONY : dosppm/fast
+
+# Manual pre-install relink rule for target.
+dosppm/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/dosppm.dir/build.make src/integrators/CMakeFiles/dosppm.dir/preinstall
+.PHONY : dosppm/preinstall
+
 #=============================================================================
 # Target rules for targets named erpt
 
@@ -1828,6 +2381,11 @@ erpt: cmake_check_build_system
 erpt/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/erpt.dir/build.make src/integrators/CMakeFiles/erpt.dir/build
 .PHONY : erpt/fast
+
+# Manual pre-install relink rule for target.
+erpt/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/erpt.dir/build.make src/integrators/CMakeFiles/erpt.dir/preinstall
+.PHONY : erpt/preinstall
 
 #=============================================================================
 # Target rules for targets named erpt_pch
@@ -1855,6 +2413,11 @@ field/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/field.dir/build.make src/integrators/CMakeFiles/field.dir/build
 .PHONY : field/fast
 
+# Manual pre-install relink rule for target.
+field/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/field.dir/build.make src/integrators/CMakeFiles/field.dir/preinstall
+.PHONY : field/preinstall
+
 #=============================================================================
 # Target rules for targets named irrcache
 
@@ -1867,6 +2430,11 @@ irrcache: cmake_check_build_system
 irrcache/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/irrcache.dir/build.make src/integrators/CMakeFiles/irrcache.dir/build
 .PHONY : irrcache/fast
+
+# Manual pre-install relink rule for target.
+irrcache/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/irrcache.dir/build.make src/integrators/CMakeFiles/irrcache.dir/preinstall
+.PHONY : irrcache/preinstall
 
 #=============================================================================
 # Target rules for targets named irrcache_pch
@@ -1894,6 +2462,11 @@ mlt/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/mlt.dir/build.make src/integrators/CMakeFiles/mlt.dir/build
 .PHONY : mlt/fast
 
+# Manual pre-install relink rule for target.
+mlt/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/mlt.dir/build.make src/integrators/CMakeFiles/mlt.dir/preinstall
+.PHONY : mlt/preinstall
+
 #=============================================================================
 # Target rules for targets named mlt_pch
 
@@ -1920,6 +2493,11 @@ multichannel/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/multichannel.dir/build.make src/integrators/CMakeFiles/multichannel.dir/build
 .PHONY : multichannel/fast
 
+# Manual pre-install relink rule for target.
+multichannel/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/multichannel.dir/build.make src/integrators/CMakeFiles/multichannel.dir/preinstall
+.PHONY : multichannel/preinstall
+
 #=============================================================================
 # Target rules for targets named path
 
@@ -1933,6 +2511,11 @@ path/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/path.dir/build.make src/integrators/CMakeFiles/path.dir/build
 .PHONY : path/fast
 
+# Manual pre-install relink rule for target.
+path/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/path.dir/build.make src/integrators/CMakeFiles/path.dir/preinstall
+.PHONY : path/preinstall
+
 #=============================================================================
 # Target rules for targets named photonmapper
 
@@ -1945,6 +2528,11 @@ photonmapper: cmake_check_build_system
 photonmapper/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/photonmapper.dir/build.make src/integrators/CMakeFiles/photonmapper.dir/build
 .PHONY : photonmapper/fast
+
+# Manual pre-install relink rule for target.
+photonmapper/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/photonmapper.dir/build.make src/integrators/CMakeFiles/photonmapper.dir/preinstall
+.PHONY : photonmapper/preinstall
 
 #=============================================================================
 # Target rules for targets named photonmapper_pch
@@ -1972,6 +2560,11 @@ ppm/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/ppm.dir/build.make src/integrators/CMakeFiles/ppm.dir/build
 .PHONY : ppm/fast
 
+# Manual pre-install relink rule for target.
+ppm/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/ppm.dir/build.make src/integrators/CMakeFiles/ppm.dir/preinstall
+.PHONY : ppm/preinstall
+
 #=============================================================================
 # Target rules for targets named pssmlt
 
@@ -1984,6 +2577,11 @@ pssmlt: cmake_check_build_system
 pssmlt/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/pssmlt.dir/build.make src/integrators/CMakeFiles/pssmlt.dir/build
 .PHONY : pssmlt/fast
+
+# Manual pre-install relink rule for target.
+pssmlt/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/pssmlt.dir/build.make src/integrators/CMakeFiles/pssmlt.dir/preinstall
+.PHONY : pssmlt/preinstall
 
 #=============================================================================
 # Target rules for targets named pssmlt_pch
@@ -2011,6 +2609,11 @@ ptracer/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/ptracer.dir/build.make src/integrators/CMakeFiles/ptracer.dir/build
 .PHONY : ptracer/fast
 
+# Manual pre-install relink rule for target.
+ptracer/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/ptracer.dir/build.make src/integrators/CMakeFiles/ptracer.dir/preinstall
+.PHONY : ptracer/preinstall
+
 #=============================================================================
 # Target rules for targets named ptracer_pch
 
@@ -2037,6 +2640,11 @@ sppm/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/sppm.dir/build.make src/integrators/CMakeFiles/sppm.dir/build
 .PHONY : sppm/fast
 
+# Manual pre-install relink rule for target.
+sppm/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/sppm.dir/build.make src/integrators/CMakeFiles/sppm.dir/preinstall
+.PHONY : sppm/preinstall
+
 #=============================================================================
 # Target rules for targets named volpath
 
@@ -2049,6 +2657,11 @@ volpath: cmake_check_build_system
 volpath/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/volpath.dir/build.make src/integrators/CMakeFiles/volpath.dir/build
 .PHONY : volpath/fast
+
+# Manual pre-install relink rule for target.
+volpath/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/volpath.dir/build.make src/integrators/CMakeFiles/volpath.dir/preinstall
+.PHONY : volpath/preinstall
 
 #=============================================================================
 # Target rules for targets named volpath_simple
@@ -2063,6 +2676,11 @@ volpath_simple/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/volpath_simple.dir/build.make src/integrators/CMakeFiles/volpath_simple.dir/build
 .PHONY : volpath_simple/fast
 
+# Manual pre-install relink rule for target.
+volpath_simple/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/volpath_simple.dir/build.make src/integrators/CMakeFiles/volpath_simple.dir/preinstall
+.PHONY : volpath_simple/preinstall
+
 #=============================================================================
 # Target rules for targets named vpl
 
@@ -2075,6 +2693,11 @@ vpl: cmake_check_build_system
 vpl/fast:
 	$(MAKE) -f src/integrators/CMakeFiles/vpl.dir/build.make src/integrators/CMakeFiles/vpl.dir/build
 .PHONY : vpl/fast
+
+# Manual pre-install relink rule for target.
+vpl/preinstall:
+	$(MAKE) -f src/integrators/CMakeFiles/vpl.dir/build.make src/integrators/CMakeFiles/vpl.dir/preinstall
+.PHONY : vpl/preinstall
 
 #=============================================================================
 # Target rules for targets named test_chisquare
@@ -2089,6 +2712,11 @@ test_chisquare/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_chisquare.dir/build.make src/tests/CMakeFiles/test_chisquare.dir/build
 .PHONY : test_chisquare/fast
 
+# Manual pre-install relink rule for target.
+test_chisquare/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_chisquare.dir/build.make src/tests/CMakeFiles/test_chisquare.dir/preinstall
+.PHONY : test_chisquare/preinstall
+
 #=============================================================================
 # Target rules for targets named test_dgeom
 
@@ -2101,6 +2729,11 @@ test_dgeom: cmake_check_build_system
 test_dgeom/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_dgeom.dir/build.make src/tests/CMakeFiles/test_dgeom.dir/build
 .PHONY : test_dgeom/fast
+
+# Manual pre-install relink rule for target.
+test_dgeom/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_dgeom.dir/build.make src/tests/CMakeFiles/test_dgeom.dir/preinstall
+.PHONY : test_dgeom/preinstall
 
 #=============================================================================
 # Target rules for targets named test_kd
@@ -2115,6 +2748,11 @@ test_kd/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_kd.dir/build.make src/tests/CMakeFiles/test_kd.dir/build
 .PHONY : test_kd/fast
 
+# Manual pre-install relink rule for target.
+test_kd/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_kd.dir/build.make src/tests/CMakeFiles/test_kd.dir/preinstall
+.PHONY : test_kd/preinstall
+
 #=============================================================================
 # Target rules for targets named test_la
 
@@ -2127,6 +2765,11 @@ test_la: cmake_check_build_system
 test_la/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_la.dir/build.make src/tests/CMakeFiles/test_la.dir/build
 .PHONY : test_la/fast
+
+# Manual pre-install relink rule for target.
+test_la/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_la.dir/build.make src/tests/CMakeFiles/test_la.dir/preinstall
+.PHONY : test_la/preinstall
 
 #=============================================================================
 # Target rules for targets named test_quad
@@ -2141,6 +2784,11 @@ test_quad/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_quad.dir/build.make src/tests/CMakeFiles/test_quad.dir/build
 .PHONY : test_quad/fast
 
+# Manual pre-install relink rule for target.
+test_quad/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_quad.dir/build.make src/tests/CMakeFiles/test_quad.dir/preinstall
+.PHONY : test_quad/preinstall
+
 #=============================================================================
 # Target rules for targets named test_random
 
@@ -2153,6 +2801,11 @@ test_random: cmake_check_build_system
 test_random/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_random.dir/build.make src/tests/CMakeFiles/test_random.dir/build
 .PHONY : test_random/fast
+
+# Manual pre-install relink rule for target.
+test_random/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_random.dir/build.make src/tests/CMakeFiles/test_random.dir/preinstall
+.PHONY : test_random/preinstall
 
 #=============================================================================
 # Target rules for targets named test_rtrans
@@ -2167,6 +2820,11 @@ test_rtrans/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_rtrans.dir/build.make src/tests/CMakeFiles/test_rtrans.dir/build
 .PHONY : test_rtrans/fast
 
+# Manual pre-install relink rule for target.
+test_rtrans/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_rtrans.dir/build.make src/tests/CMakeFiles/test_rtrans.dir/preinstall
+.PHONY : test_rtrans/preinstall
+
 #=============================================================================
 # Target rules for targets named test_samplers
 
@@ -2179,6 +2837,11 @@ test_samplers: cmake_check_build_system
 test_samplers/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_samplers.dir/build.make src/tests/CMakeFiles/test_samplers.dir/build
 .PHONY : test_samplers/fast
+
+# Manual pre-install relink rule for target.
+test_samplers/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_samplers.dir/build.make src/tests/CMakeFiles/test_samplers.dir/preinstall
+.PHONY : test_samplers/preinstall
 
 #=============================================================================
 # Target rules for targets named test_sh
@@ -2193,6 +2856,11 @@ test_sh/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_sh.dir/build.make src/tests/CMakeFiles/test_sh.dir/build
 .PHONY : test_sh/fast
 
+# Manual pre-install relink rule for target.
+test_sh/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_sh.dir/build.make src/tests/CMakeFiles/test_sh.dir/preinstall
+.PHONY : test_sh/preinstall
+
 #=============================================================================
 # Target rules for targets named test_spectrum
 
@@ -2206,6 +2874,11 @@ test_spectrum/fast:
 	$(MAKE) -f src/tests/CMakeFiles/test_spectrum.dir/build.make src/tests/CMakeFiles/test_spectrum.dir/build
 .PHONY : test_spectrum/fast
 
+# Manual pre-install relink rule for target.
+test_spectrum/preinstall:
+	$(MAKE) -f src/tests/CMakeFiles/test_spectrum.dir/build.make src/tests/CMakeFiles/test_spectrum.dir/preinstall
+.PHONY : test_spectrum/preinstall
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -2215,7 +2888,6 @@ help:
 	@echo "... edit_cache"
 	@echo "... install"
 	@echo "... install/local"
-	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... scene_schema"
@@ -2347,6 +3019,7 @@ help:
 	@echo "... bdpt"
 	@echo "... bdpt_pch"
 	@echo "... direct"
+	@echo "... dosppm"
 	@echo "... erpt"
 	@echo "... erpt_pch"
 	@echo "... field"
