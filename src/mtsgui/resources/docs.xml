@@ -425,6 +425,25 @@
 		</param>
 		<param name="alpha" readableName="Size reduction parameter" type="float" default="0.7" importance="1">Alpha parameter from the paper (influences the speed, at which the photon radius is reduced)</param>
 	</plugin>
+	<plugin type="integrator" name="dosppm" readableName="Distributed out of core stochastic progressive photon mapper"
+			show="true" className="DOSPPMIntegrator" extends="Integrator">
+		<descr>
+			<p></p>
+		</descr>
+		<param name="maxDepth" readableName="Maximum depth" type="integer" default="-1">
+			Specifies the longest path depth in the generated output image (where <tt>-1</tt>
+			corresponds to ∞). A value of 1 will only render directly visible light sources.
+			2 will lead to single-bounce (direct-only) illumination, and so on.
+		</param>
+		<param name="initialRadius" readableName="Initial radius" type="float" default="0">Initial photon query radius (<tt>0</tt> = infer based on scene size and camera resolution)</param>
+		<param name="photonCount" readableName="Photons per iteration" type="integer" default="250000">Number of photons to shoot in each iteration</param>
+		<param name="granularity" readableName="Work unit granularity" importance="1" type="integer" default="0">Granularity of photon tracing work units (in numbers of traced particles, <tt>0</tt> = decide automatically)</param>
+		<param name="rrDepth" readableName="Russian Roulette starting depth" type="integer" default="5" importance="1">
+			Specifies the minimum path depth, after which the implementation will start to use the
+			"russian roulette" path termination criterion (set to <tt>-1</tt> to disable).
+		</param>
+		<param name="alpha" readableName="Size reduction parameter" type="float" default="0.7" importance="1">Alpha parameter from the paper (influences the speed, at which the photon radius is reduced)</param>
+	</plugin>
 
 	<plugin type="integrator" name="bdpt" readableName="Bidirectional path tracer" show="true"
 			className="BidirectionalIntegrator" extends="Integrator">

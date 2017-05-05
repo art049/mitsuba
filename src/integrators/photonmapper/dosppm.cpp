@@ -27,7 +27,7 @@
 
 MTS_NAMESPACE_BEGIN
 
-/*!\plugin{sppm}{Distributed out of core stochastic progressive photon mapping integrator}
+/*!\plugin{dosppm}{Distributed out of core stochastic progressive photon mapping integrator}
  * \order{8}
  * \parameters{
  *     \parameter{maxDepth}{\Integer}{Specifies the longest path depth
@@ -69,7 +69,7 @@ MTS_NAMESPACE_BEGIN
  *    models.
  * }
  */
-class SPPMIntegrator : public Integrator {
+class DOSPPMIntegrator : public Integrator {
 public:
 	/// Represents one individual PPM gather point including relevant statistics
 	struct GatherPoint {
@@ -85,7 +85,7 @@ public:
 		inline GatherPoint() : weight(0.0f), flux(0.0f), emission(0.0f), N(0.0f) { }
 	};
 
-	SPPMIntegrator(const Properties &props) : Integrator(props) {
+	DOSPPMIntegrator(const Properties &props) : Integrator(props) {
 		/* Initial photon query radius (0 = infer based on scene size and sensor resolution) */
 		m_initialRadius = props.getFloat("initialRadius", 0);
 		/* Alpha parameter from the paper (influences the speed, at which the photon radius is reduced) */
@@ -112,7 +112,7 @@ public:
 			Log(EError, "Maximum number of Passes must either be set to \"-1\" or \"1\" or higher!");
 	}
 
-	SPPMIntegrator(Stream *stream, InstanceManager *manager)
+	DOSPPMIntegrator(Stream *stream, InstanceManager *manager)
 	 : Integrator(stream, manager) { }
 
 	void serialize(Stream *stream, InstanceManager *manager) const {
@@ -382,7 +382,7 @@ public:
 
 	std::string toString() const {
 		std::ostringstream oss;
-		oss << "SPPMIntegrator[" << endl
+		oss << "DOSPPMIntegrator[" << endl
 			<< "  maxDepth = " << m_maxDepth << "," << endl
 			<< "  rrDepth = " << m_rrDepth << "," << endl
 			<< "  initialRadius = " << m_initialRadius << "," << endl
@@ -409,6 +409,6 @@ private:
 	int m_maxPasses;
 };
 
-MTS_IMPLEMENT_CLASS_S(SPPMIntegrator, false, Integrator)
-MTS_EXPORT_PLUGIN(SPPMIntegrator, "Stochastic progressive photon mapper");
+MTS_IMPLEMENT_CLASS(DOSPPMIntegrator, false, Integrator)
+MTS_EXPORT_PLUGIN(DOSPPMIntegrator, "Distributed out of core stochastic progressive photon mapper");
 MTS_NAMESPACE_END
