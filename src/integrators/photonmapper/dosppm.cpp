@@ -21,6 +21,8 @@
 #include <mitsuba/render/gatherproc.h>
 #include <mitsuba/render/renderqueue.h>
 
+#include <utility>
+
 
 #if defined(MTS_OPENMP)
 # include <omp.h>
@@ -70,6 +72,17 @@ MTS_NAMESPACE_BEGIN
  *    models.
  * }
  */
+//TODO: Move this struc into a header
+ struct iAABB {
+ 	Point3i min;
+ 	Point3i max;
+ 	iAABB(Point3i min=Point3i(), Point3i max=Point3i()): min(min), max(max){}
+ 	friend std::ostream& operator << ( std::ostream& o, const iAABB& e ) {
+ 		 o << "min :" << e.min[0] << " " << e.min[1] << " " <<e.min[2]
+		   <<", max:" << e.max[0] << " " << e.max[1] << " " <<e.max[2];
+ 		 return o;
+ 	}
+ };
 class DOSPPMIntegrator : public Integrator {
 public:
 	/// Represents one individual PPM gather point including relevant statistics
@@ -125,9 +138,49 @@ public:
 		m_running = false;
 	}
 
+	int sum_poly(std::vector<unsigned int> poly_count, Point3i min, Point3i max, Point3i n_cell){
+		unsigned int n_poly = 0;
+		for(float x=min[0]; x < max[0]; x++){
+			for(float y = min[1] ; y < max[1]; y++){
+				for(float z = min[2]; z < max[2]; z++){
+					int cell_id = x + y * n_cell[1] + z * n_cell[0] *  n_cell[1];
+					n_poly += poly_count[cell_id];
+				}
+			}
+		}
+		return n_poly;
+	}
+
+	std::pair<iAABB, iAABB> split_in_chunks(std::vector<unsigned int> poly_count, iAABB * parent, Point3i n_cell){
+		Point3i min(parent->min), max(parent->max);
+		unsigned int parent_poly_count = sum_poly(poly_count, min, max, n_cell);
+		int min_axis = -1, min_i = -1;
+		unsigned int min_polydifference = parent_poly_count;
+		for(int axis = 0; axis < 3; axis++){
+			Point3i offset_vector(0,0,0);
+			offset_vector[axis] = 1;
+			unsigned int current_polycount = 0;
+			for(int i = min[axis]; i < max[axis]; i++){
+				unsigned int slice_poly_count = sum_poly(poly_count, min, Point3i(max - offset_vector * (max[axis] - i - 1)), n_cell);
+				current_polycount += slice_poly_count;
+				unsigned int current_polydifference = abs(current_polycount - (parent_poly_count - current_polycount));
+				if(current_polydifference < min_polydifference){
+					min_axis = axis;
+					min_i = i;
+					min_polydifference = current_polydifference;
+					cout << "Split output : Axis " << min_axis << " Split pos : " << min_i << "Poly diff : " << min_polydifference << endl;
+				}
+			}
+		}
+		Point3i min_offset_vector(0,0,0);
+		min_offset_vector[min_axis] = 1;
+		return std::make_pair(iAABB(min, Point3i(max - min_offset_vector * (max[min_axis] - min_i - 1))),
+		                 iAABB(Point3i(min + min_offset_vector * (min_i+1)), max));
+	}
+
 	void subdivide_scene(const Scene *scene){
 		AABB sceneBox = scene->getAABB();
-		float grid_size = 2.;
+		float grid_size = 1.;
 		Point cell_offset = Point(grid_size, grid_size, grid_size);
 		for(int i = 0; i < 8; i++)
 		  cout << sceneBox.getCorner(i).toString() << endl;
@@ -136,19 +189,21 @@ public:
 		Point max = sceneBox.getCorner(7);
 		std::vector<AABB> cells;
 
-		int n_cellx = 0, n_celly = 0 ,n_cellz = 0;
+		Point3i n_cell(0, 0, 0); // Block count in each direction
 		for(float x=min[0]; x < max[0]; x+= grid_size){
 			for(float y = min[1] ; y < max[1]; y+= grid_size){
 				for(float z = min[2]; z < max[2]; z+= grid_size){
 					Point current(x, y, z);
 					cells.push_back(AABB(current, current + cell_offset));
-					n_cellz++;
+					n_cell[2]++;
 				}
-				n_celly++;
+				n_cell[1]++;
 			}
-			n_cellx++;
+			n_cell[0]++;
 		}
-		cout << "NX:" << n_cellx << " NY:"<< n_celly/n_cellx << " NZ:"<< n_cellz / n_celly << endl;
+		n_cell[2] /= n_cell[1];
+		n_cell[1] /= n_cell[0];
+		cout << "NX:" << n_cell[0] << " NY:"<< n_cell[1] << " NZ:"<< n_cell[2] << endl;
 		cout << "Cells : " << cells.size() << endl;
 		std::vector<unsigned int> poly_count(cells.size());
 		std::vector<TriMesh*> meshes = scene->getMeshes();
@@ -167,6 +222,24 @@ public:
 		}
 		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++)
 		  cout << "Cell " << cell_id << " : " << poly_count[cell_id] << endl;
+		//Chunks build
+		int split_depth = 3;
+		std::vector<iAABB> chunks;
+		std::pair<iAABB, iAABB> cur_chunks;
+
+		chunks.push_back(iAABB(Point3i(0,0,0), n_cell));
+		for(int depth = 0; depth < split_depth; depth++){
+			std::vector<iAABB> tmp_chunks;
+			for(unsigned int i = 0; i < chunks.size(); i++){
+				cur_chunks = split_in_chunks(poly_count, &chunks[i], n_cell);
+				tmp_chunks.push_back(cur_chunks.first);
+				tmp_chunks.push_back(cur_chunks.second);
+			}
+			chunks = tmp_chunks;
+		}
+		for(unsigned int i = 0; i < chunks.size(); i++){
+			cout << chunks[i]<< endl;
+		}
 	}
 
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
