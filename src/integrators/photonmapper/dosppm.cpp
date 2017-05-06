@@ -21,6 +21,7 @@
 #include <mitsuba/render/gatherproc.h>
 #include <mitsuba/render/renderqueue.h>
 
+
 #if defined(MTS_OPENMP)
 # include <omp.h>
 #endif
@@ -124,10 +125,54 @@ public:
 		m_running = false;
 	}
 
+	void subdivide_scene(const Scene *scene){
+		AABB sceneBox = scene->getAABB();
+		float grid_size = 2.;
+		Point cell_offset = Point(grid_size, grid_size, grid_size);
+		for(int i = 0; i < 8; i++)
+		  cout << sceneBox.getCorner(i).toString() << endl;
+		cout << endl;
+		Point min = sceneBox.getCorner(0);
+		Point max = sceneBox.getCorner(7);
+		std::vector<AABB> cells;
+
+		int n_cellx = 0, n_celly = 0 ,n_cellz = 0;
+		for(float x=min[0]; x < max[0]; x+= grid_size){
+			for(float y = min[1] ; y < max[1]; y+= grid_size){
+				for(float z = min[2]; z < max[2]; z+= grid_size){
+					Point current(x, y, z);
+					cells.push_back(AABB(current, current + cell_offset));
+					n_cellz++;
+				}
+				n_celly++;
+			}
+			n_cellx++;
+		}
+		cout << "NX:" << n_cellx << " NY:"<< n_celly/n_cellx << " NZ:"<< n_cellz / n_celly << endl;
+		cout << "Cells : " << cells.size() << endl;
+		std::vector<unsigned int> poly_count(cells.size());
+		std::vector<TriMesh*> meshes = scene->getMeshes();
+		//Count polygons
+		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++){
+			for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
+				if(TAABB<Point>(cells[cell_id]).overlaps(meshes[mesh_id]->getAABB())){
+					//Count poly in box
+					for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
+						Triangle * triangles = meshes[mesh_id]->getTriangles();
+						if(TAABB<Point>(cells[cell_id]).overlaps(triangles[tri_id].getAABB(meshes[mesh_id]->getVertexPositions())))
+						  poly_count[cell_id]++;
+					}
+				}
+			}
+		}
+		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++)
+		  cout << "Cell " << cell_id << " : " << poly_count[cell_id] << endl;
+	}
 
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
 			int sceneResID, int sensorResID, int samplerResID) {
 		Integrator::preprocess(scene, queue, job, sceneResID, sensorResID, samplerResID);
+		subdivide_scene(scene);
 
 		if (m_initialRadius == 0) {
 			/* Guess an initial radius if not provided
