@@ -78,8 +78,8 @@ MTS_NAMESPACE_BEGIN
  	Point3i max;
  	iAABB(Point3i min=Point3i(), Point3i max=Point3i()): min(min), max(max){}
  	friend std::ostream& operator << ( std::ostream& o, const iAABB& e ) {
- 		 o << "min :" << e.min[0] << " " << e.min[1] << " " <<e.min[2]
-		   <<", max:" << e.max[0] << " " << e.max[1] << " " <<e.max[2];
+ 		 o << "min: " << e.min[0] << " " << e.min[1] << " " <<e.min[2]
+		   <<", max: " << e.max[0] << " " << e.max[1] << " " <<e.max[2];
  		 return o;
  	}
  };
@@ -168,7 +168,7 @@ public:
 					min_axis = axis;
 					min_i = i;
 					min_polydifference = current_polydifference;
-					cout << "Split output : Axis " << min_axis << " Split pos : " << min_i << "Poly diff : " << min_polydifference << endl;
+					cout << "Split output : Axis " << min_axis << " Split pos : " << min_i << " Poly diff : " << min_polydifference << endl;
 				}
 			}
 		}
@@ -179,9 +179,11 @@ public:
 	}
 
 	void subdivide_scene(const Scene *scene){
+		cout << scene->toString() << "\n" << endl;
 		AABB sceneBox = scene->getAABB();
 		float grid_size = 1.;
 		Point cell_offset = Point(grid_size, grid_size, grid_size);
+		cout << "\nScene corners" << endl;
 		for(int i = 0; i < 8; i++)
 		  cout << sceneBox.getCorner(i).toString() << endl;
 		cout << endl;
@@ -221,13 +223,14 @@ public:
 			}
 		}
 		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++)
-		  cout << "Cell " << cell_id << " : " << poly_count[cell_id] << endl;
+		  cout << "Cell " << cell_id << " has " << poly_count[cell_id] << " polygons" << endl;
 		//Chunks build
 		int split_depth = 3;
 		std::vector<iAABB> chunks;
 		std::pair<iAABB, iAABB> cur_chunks;
 
 		chunks.push_back(iAABB(Point3i(0,0,0), n_cell));
+		cout << endl;
 		for(int depth = 0; depth < split_depth; depth++){
 			std::vector<iAABB> tmp_chunks;
 			for(unsigned int i = 0; i < chunks.size(); i++){
@@ -237,9 +240,11 @@ public:
 			}
 			chunks = tmp_chunks;
 		}
+		cout << endl;
 		for(unsigned int i = 0; i < chunks.size(); i++){
 			cout << chunks[i]<< endl;
 		}
+		cout << endl;
 	}
 
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,

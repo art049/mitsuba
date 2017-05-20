@@ -1,16 +1,26 @@
+COMMANDS = "source setpath.sh; bash"
+RUN_COMMANDS = "source setpath.sh; mitsuba scene/bathroom/scene.xml"
+
 .PHONY: build
 build: Makefile dockerbuild.log
 	docker run --rm \
 	-v $(shell pwd):/mitsuba \
 	-w /mitsuba \
 	mitsuba \
-	sh -c 'scons -j 4'
+	sh -c 'scons -j 8'
 
 .PHONY: webrun
 webrun: build
 	./docker_env/run.sh -c mitsuba-web-gui -i mitsuba
 
-.PHONY: interactive
+.PHONY: render
+render: commands interactive
+
+.PHONY: commands 
+commands:
+	$(eval COMMANDS = $(RUN_COMMANDS))
+
+.PHONY: interactive 
 interactive:
 	docker run --rm \
 	-v $(shell pwd):/mitsuba \
@@ -18,7 +28,7 @@ interactive:
 	-e DISPLAY=$(DISPLAY) \
 	-v /tmp/.X11-unix:/tmp/.X11-unix \
 	-it mitsuba \
-	bash
+	bash -c $(COMMANDS)
 
 Makefile: CMakeLists.txt
 	docker run --rm \

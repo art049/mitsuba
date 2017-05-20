@@ -68,3 +68,6 @@ binaries
 src/mtsgui
 *.gch
 docker-build.log
+
+#scenes
+/scene
