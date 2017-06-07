@@ -18,6 +18,8 @@ render: commands interactive
 
 .PHONY: commands 
 commands:
+	rm -f *.log
+	rm -f *.obj
 	$(eval COMMANDS = $(RUN_COMMANDS))
 
 .PHONY: interactive 

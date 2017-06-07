@@ -21,6 +21,10 @@
 #include <mitsuba/render/gatherproc.h>
 #include <mitsuba/render/renderqueue.h>
 
+#include <iostream>
+#include <fstream> 
+#include <string>
+
 #include <utility>
 
 
@@ -221,8 +225,8 @@ public:
 				// bsdf->getID();
 				if(TAABB<Point>(cells[cell_id]).overlaps(meshes[mesh_id]->getAABB())){
 					//Count poly in box
+					Triangle * triangles = meshes[mesh_id]->getTriangles();
 					for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
-						Triangle * triangles = meshes[mesh_id]->getTriangles();
 						if(TAABB<Point>(cells[cell_id]).overlaps(triangles[tri_id].getAABB(meshes[mesh_id]->getVertexPositions())))
 						  poly_count[cell_id]++;
 					}
@@ -251,12 +255,12 @@ public:
 		}
 		cout << endl;
 		for(unsigned int i = 0; i < chunks.size(); i++){
-			createSubScene(scene, meshes, chunks[i]);
+			createSubScene(scene, meshes, chunks[i], i);
 		}
 		cout << endl;
 	}
 
-	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk){
+	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk, int chunkNb){
 		cout << chunk << endl;
 		/* 	1) create/get scene template
 			2) find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the scene
@@ -264,25 +268,75 @@ public:
 
 		// Loop through the meshes
 		TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
+		std::vector<uint32_t*> f;
+		std::vector<Normal> vn;
+		std::vector< Point2 > vt;
+		std::vector< Point > v;
+		std::string chunkName("chunk");
+		std::ostringstream oss;
+		oss << chunkNb;
+		chunkName += oss.str();
+
 		for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
 			// Check if the mesh intersects the chunk 
 			/*cout << "chunkAABB: " << chunkAABB.toString() << endl;
 			cout << "meshAABB: " << meshes[mesh_id]->getAABB().toString() << endl;*/
 			if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
 				// If so, make an obj out of the triangles that intersect the chunk
-				cout << mesh_id << endl;
+				//cout << mesh_id << endl;
+				Triangle * triangles = meshes[mesh_id]->getTriangles();
+				Normal * normals = meshes[mesh_id]->getVertexNormals();
+				Point2 * texcoords = meshes[mesh_id]->getVertexTexcoords();
+			 	Point * vertices = meshes[mesh_id]->getVertexPositions();
+				
+
+				for(unsigned int i=0; i<meshes[mesh_id]->getVertexCount(); i++){
+					v.push_back(vertices[i]);
+					vn.push_back(normals[i]);
+					vt.push_back(texcoords[i]);
+				}
+
 				for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
-					Triangle * triangles = meshes[mesh_id]->getTriangles();
 					if(chunkAABB.overlaps(triangles[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
-						cout << "triangles: " << triangles[tri_id].idx;
-						/*v.push_back();
-						vt.push_back();
-						vn.push_back();
-						f.push_back();*/
+						f.push_back(triangles[tri_id].idx);
+						//cout << "triangles: " << f.back()[0] << " " << f.back()[1] << " " << f.back()[2] << endl;
+						//cout << "vertex: " << v.back().toString() << endl;
 					}
 				}
+				
+				// Make a new .obj from that file
+				std::string objName(chunkName);
+				std::ostringstream oss;
+				oss << "_obj" << mesh_id << ".obj";
+				objName += oss.str();
+				std::ofstream outfile (objName.c_str(), std::ofstream::trunc);
+				std::string vstr("");
+				std::string vnstr("");
+				std::string vtstr("");
+				std::string fstr("");
+				for(unsigned int i=0; i<f.size(); i++){
+					std::ostringstream oss;
+					oss << "v " << v[i][0] << " " << v[i][1] << " " << v[i][2] << "\n";
+					vstr += oss.str();
+					oss.str("");
+					oss << "vn " << vn[i][0] << " " << vn[i][1] << " " << vn[i][2] << "\n";
+					vnstr += oss.str();
+					oss.str("");
+					oss << "vt " << vt[i][0] << " " << vt[i][1] << "\n";
+					vtstr += oss.str();
+					oss.str("");
+					oss << "f " << f[i][0] << "/" << f[i][0] << "/" << f[i][0] << " " << f[i][1] << "/" << f[i][1] << "/" << f[i][1] << " " << f[i][2] << "/" << f[i][2] << "/" << f[i][2] << "\n";
+					fstr += oss.str();
+				}
+				//cout << vnstr << endl;
+				outfile << vstr << std::endl;
+				outfile << vnstr << std::endl;
+				outfile << vtstr << std::endl;
+				outfile << fstr << std::endl;
+				outfile.close();
 			}
 		}
+		cout << "Objs for chunk " << chunkNb << " were created" << endl;
 	}
 
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
