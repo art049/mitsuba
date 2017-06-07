@@ -179,7 +179,9 @@ public:
 	}
 
 	void subdivide_scene(const Scene *scene){
-		cout << scene->toString() << "\n" << endl;
+		
+		// COMPUTE SCENE BB
+		//cout << scene->toString() << "\n" << endl;
 		AABB sceneBox = scene->getAABB();
 		float grid_size = 1.;
 		Point cell_offset = Point(grid_size, grid_size, grid_size);
@@ -187,10 +189,11 @@ public:
 		for(int i = 0; i < 8; i++)
 		  cout << sceneBox.getCorner(i).toString() << endl;
 		cout << endl;
+
+		// COMPUTE SCENE GRID
 		Point min = sceneBox.getCorner(0);
 		Point max = sceneBox.getCorner(7);
 		std::vector<AABB> cells;
-
 		Point3i n_cell(0, 0, 0); // Block count in each direction
 		for(float x=min[0]; x < max[0]; x+= grid_size){
 			for(float y = min[1] ; y < max[1]; y+= grid_size){
@@ -207,11 +210,15 @@ public:
 		n_cell[1] /= n_cell[0];
 		cout << "NX:" << n_cell[0] << " NY:"<< n_cell[1] << " NZ:"<< n_cell[2] << endl;
 		cout << "Cells : " << cells.size() << endl;
+		
+		// COMPUTE POLYGON NUMBER PER CELL
 		std::vector<unsigned int> poly_count(cells.size());
 		std::vector<TriMesh*> meshes = scene->getMeshes();
 		//Count polygons
 		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++){
 			for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
+				//const BSDF *bsdf = meshes[mesh_id]->getBSDF();
+				// bsdf->getID();
 				if(TAABB<Point>(cells[cell_id]).overlaps(meshes[mesh_id]->getAABB())){
 					//Count poly in box
 					for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
@@ -224,7 +231,9 @@ public:
 		}
 		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++)
 		  cout << "Cell " << cell_id << " has " << poly_count[cell_id] << " polygons" << endl;
-		//Chunks build
+		
+
+		// BUILD CHUNKS
 		int split_depth = 3;
 		std::vector<iAABB> chunks;
 		std::pair<iAABB, iAABB> cur_chunks;
@@ -242,15 +251,45 @@ public:
 		}
 		cout << endl;
 		for(unsigned int i = 0; i < chunks.size(); i++){
-			cout << chunks[i]<< endl;
+			createSubScene(scene, meshes, chunks[i]);
 		}
 		cout << endl;
+	}
+
+	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk){
+		cout << chunk << endl;
+		/* 	1) create/get scene template
+			2) find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the scene
+		*/
+
+		// Loop through the meshes
+		TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
+		for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
+			// Check if the mesh intersects the chunk 
+			/*cout << "chunkAABB: " << chunkAABB.toString() << endl;
+			cout << "meshAABB: " << meshes[mesh_id]->getAABB().toString() << endl;*/
+			if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
+				// If so, make an obj out of the triangles that intersect the chunk
+				cout << mesh_id << endl;
+				for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
+					Triangle * triangles = meshes[mesh_id]->getTriangles();
+					if(chunkAABB.overlaps(triangles[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
+						cout << "triangles: " << triangles[tri_id].idx;
+						/*v.push_back();
+						vt.push_back();
+						vn.push_back();
+						f.push_back();*/
+					}
+				}
+			}
+		}
 	}
 
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
 			int sceneResID, int sensorResID, int samplerResID) {
 		Integrator::preprocess(scene, queue, job, sceneResID, sensorResID, samplerResID);
 		subdivide_scene(scene);
+
 
 		if (m_initialRadius == 0) {
 			/* Guess an initial radius if not provided
