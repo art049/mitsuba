@@ -336,8 +336,8 @@ public:
 		for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
 			
 			// Check if the mesh intersects the chunk 
-			/*cout << "chunkAABB: " << chunkAABB.toString() << endl;
-			cout << "meshAABB: " << meshes[mesh_id]->getAABB().toString() << endl;*/
+			
+			// @Arthur: tester si le mesh intersecte le chunk => ce test seul est déjà éliminatoire
 			if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
 				// If so, make an obj out of the triangles that intersect the chunk
 				//cout << mesh_id << endl;
@@ -382,9 +382,10 @@ public:
 				}
 
 				for(unsigned int tri_id=0; tri_id<meshes[mesh_id]->getTriangleCount(); tri_id++){
+					// @Arthur: tester si le triangle intersecte le chunk
 					if(chunkAABB.overlaps(f[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
 						std::ostringstream oss;
-						oss << "f " << f[tri_id].idx[0] << "/" << f[tri_id].idx[0] << "/" << f[tri_id].idx[0] << " " << f[tri_id].idx[1] << "/" << f[tri_id].idx[1] << "/" << f[tri_id].idx[1] << " " << f[tri_id].idx[2] << "/" << f[tri_id].idx[2] << "/" << f[tri_id].idx[2] << "\n";
+						oss << "f " << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << " " << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << " " << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "\n";
 						fstr += oss.str();
 					}
 				}
