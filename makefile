@@ -19,7 +19,7 @@ render: commands interactive
 .PHONY: commands 
 commands:
 	rm -f *.log
-	rm -rf subscene/*
+	#rm -rf subscene/*
 	$(eval COMMANDS = $(RUN_COMMANDS))
 
 .PHONY: interactive 

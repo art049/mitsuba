@@ -254,6 +254,14 @@ public:
 			chunks = tmp_chunks;
 		}
 		cout << endl;
+
+		cout << "CHUNKS:" << endl;
+		for(unsigned int i = 0; i < chunks.size(); i++){
+			cout << chunks[i] << endl;
+		}
+		cout << endl;
+
+		cout << "SUBSCENE CREATION" << endl;
 		createSubSceneTemplate(scene);
 		for(unsigned int i = 0; i < chunks.size(); i++){
 			createSubScene(scene, meshes, chunks[i], i);
@@ -266,10 +274,11 @@ public:
 		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
 	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
 
-		// Create a subscene folder
+		// Create the subscene folder and recreate it
 		std::string folderPath("/mitsuba/subscene/");
-		boost::filesystem::path dir(folderPath.c_str());
-		boost::filesystem::create_directory(dir);
+		fs::path dir(folderPath.c_str());
+		fs::remove_all(folderPath);
+		fs::create_directory(dir);
 
 		// Copy what we want from the original file, keep 
 		const char * src_file = scene->getSourceFile().string().c_str();
@@ -299,8 +308,16 @@ public:
 		oss << "subscene/sub" << chunkNb << "/";
 		folderPath += oss.str();
 		oss.str("");
-		boost::filesystem::path dir(folderPath.c_str());
-		boost::filesystem::create_directory(dir);
+		fs::path dir(folderPath.c_str());
+		fs::create_directory(dir);
+
+		// Copy texture files from original into subscene folder
+		std::string sceneFile = scene->getSourceFile().string();
+		std::string sceneTextPath = sceneFile.substr(0,sceneFile.size()-9) + "textures/";
+		//cout << "src: " << sceneTextPath << " dest: " << folderPath + "textures/" << endl;
+		fs::path source(sceneTextPath.c_str());
+		fs::path dest((folderPath + "textures/").c_str());
+		copyDir(source,dest);
 
 		// Copy template into new scene file
 		std::ifstream sceneTemplate("/mitsuba/subscene/subSceneTemplate.xml");
@@ -345,7 +362,6 @@ public:
 				std::string vtstr("");
 				std::string fstr("");
 				
-				cout << "Processing " << objName << " with " << meshes[mesh_id]->getVertexCount() << " vertices" << endl;
 				for(unsigned int i=0; i<meshes[mesh_id]->getVertexCount(); i++){
 
 					// Add vertices to the .obj
@@ -365,8 +381,6 @@ public:
 						vtstr += oss.str();
 					}
 				}
-
-				cout << "past vertices" << endl;
 
 				for(unsigned int i=0; i<meshes[mesh_id]->getTriangleCount(); i++){
 					std::ostringstream oss;
@@ -390,13 +404,78 @@ public:
 							<< "\t\t</transform>\n"
 							<< "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
 							<< "\t</shape>" << endl;
-				cout << "Created " << objName << " for chunk " << chunkNb << endl;
+				cout << "Created " << objName << endl;
 			//}
 		}
-		cout << "Objs for chunk " << chunkNb << " were created" << endl;
+		cout << "Objs for chunk " << chunkNb << " were created\n" << endl;
 		subscene << "</scene>" << endl;
 		sceneTemplate.close();
 		subscene.close();
+	}
+
+	//https://stackoverflow.com/questions/8593608/how-can-i-copy-a-directory-using-boost-filesystem
+	bool copyDir(fs::path const & source,fs::path const & destination)
+	{
+	    try
+	    {
+	        // Check whether the function call is valid
+	        if(!fs::exists(source) || !fs::is_directory(source)){
+	            std::cerr << "Source directory " << source.string()
+	                << " does not exist or is not a directory." << '\n'
+	            ;
+	            return false;
+	        }
+	        // Create the destination directory
+	        if(!fs::create_directory(destination))
+	        {
+	            std::cerr << "Unable to create destination directory"
+	                << destination.string() << '\n'
+	            ;
+	            return false;
+	        }
+	    }
+	    catch(fs::filesystem_error const & e)
+	    {
+	        std::cerr << e.what() << '\n';
+	        return false;
+	    }
+	    // Iterate through the source directory
+	    for(
+	        fs::directory_iterator file(source);
+	        file != fs::directory_iterator(); ++file
+	    )
+	    {
+	        try
+	        {
+	            fs::path current(file->path());
+	            if(fs::is_directory(current))
+	            {
+	                // Found directory: Recursion
+	                if(
+	                    !copyDir(
+	                        current,
+	                        destination / current.filename()
+	                    )
+	                )
+	                {
+	                    return false;
+	                }
+	            }
+	            else
+	            {
+	                // Found file: Copy
+	                fs::copy_file(
+	                    current,
+	                    destination / current.filename()
+	                );
+	            }
+	        }
+	        catch(fs::filesystem_error const & e)
+	        {
+	            std:: cerr << e.what() << '\n';
+	        }
+	    }
+	    return true;
 	}
 
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
