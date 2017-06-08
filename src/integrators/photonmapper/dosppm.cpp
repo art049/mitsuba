@@ -300,41 +300,23 @@ public:
 
 		// Loop through the meshes
 		TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
-		std::vector<uint32_t*> f;
-		std::vector<Normal> vn;
-		std::vector< Point2 > vt;
-		std::vector< Point > v;
 		std::string chunkName("chunk");
 		std::ostringstream oss;
 		oss << chunkNb;
 		chunkName += oss.str();
 
 		for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
+			
 			// Check if the mesh intersects the chunk 
 			/*cout << "chunkAABB: " << chunkAABB.toString() << endl;
 			cout << "meshAABB: " << meshes[mesh_id]->getAABB().toString() << endl;*/
 			//if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
 				// If so, make an obj out of the triangles that intersect the chunk
 				//cout << mesh_id << endl;
-				Triangle * triangles = meshes[mesh_id]->getTriangles();
-				Normal * normals = meshes[mesh_id]->getVertexNormals();
-				Point2 * texcoords = meshes[mesh_id]->getVertexTexcoords();
-			 	Point * vertices = meshes[mesh_id]->getVertexPositions();
-				
-
-				for(unsigned int i=0; i<meshes[mesh_id]->getVertexCount(); i++){
-					v.push_back(vertices[i]);
-					vn.push_back(normals[i]);
-					vt.push_back(texcoords[i]);
-				}
-
-				for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
-					//if(chunkAABB.overlaps(triangles[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
-						f.push_back(triangles[tri_id].idx);
-						//cout << "triangles: " << f.back()[0] << " " << f.back()[1] << " " << f.back()[2] << endl;
-						//cout << "vertex: " << v.back().toString() << endl;
-					//}
-				}
+				Triangle * f = meshes[mesh_id]->getTriangles();
+				Normal * vn = meshes[mesh_id]->getVertexNormals();
+				Point2 * vt = meshes[mesh_id]->getVertexTexcoords();
+			 	Point * v = meshes[mesh_id]->getVertexPositions();
 				
 				// Make a new .obj from that file
 				std::string objName(chunkName);
@@ -348,20 +330,38 @@ public:
 				std::string vnstr("");
 				std::string vtstr("");
 				std::string fstr("");
-				for(unsigned int i=0; i<f.size(); i++){
+				
+				cout << "Processing " << objName << " with " << meshes[mesh_id]->getVertexCount() << " vertices" << endl;
+				for(unsigned int i=0; i<meshes[mesh_id]->getVertexCount(); i++){
+					if(i%5000 == 0)
+						cout << "BF " << objName << " " << i << " vt" << endl;
+
 					std::ostringstream oss;
 					oss << "v " << v[i][0] << " " << v[i][1] << " " << v[i][2] << "\n";
 					vstr += oss.str();
 					oss.str("");
+					if(i%5000 == 0)
+						cout << "AFV " << objName << " " << i << " vt" << endl;
 					oss << "vn " << vn[i][0] << " " << vn[i][1] << " " << vn[i][2] << "\n";
 					vnstr += oss.str();
 					oss.str("");
+					if(i%5000 == 0)
+						cout << "AFVN " << objName << " " << i << " vt" << endl;
 					oss << "vt " << vt[i][0] << " " << vt[i][1] << "\n";
 					vtstr += oss.str();
-					oss.str("");
-					oss << "f " << f[i][0] << "/" << f[i][0] << "/" << f[i][0] << " " << f[i][1] << "/" << f[i][1] << "/" << f[i][1] << " " << f[i][2] << "/" << f[i][2] << "/" << f[i][2] << "\n";
+					if(i%5000 == 0)
+						cout << "AF " << objName << " " << i << " vt" << endl;
+				}
+
+				cout << "past vertices" << endl;
+
+				for(unsigned int i=0; i<meshes[mesh_id]->getTriangleCount(); i++){
+					std::ostringstream oss;
+					oss << "f " << f[i].idx[0] << "/" << f[i].idx[0] << "/" << f[i].idx[0] << " " << f[i].idx[1] << "/" << f[i].idx[1] << "/" << f[i].idx[1] << " " << f[i].idx[2] << "/" << f[i].idx[2] << "/" << f[i].idx[2] << "\n";
 					fstr += oss.str();
 				}
+					
+				
 				//cout << vnstr << endl;
 				outfile << vstr << std::endl;
 				outfile << vnstr << std::endl;
@@ -377,6 +377,7 @@ public:
 							<< "\t\t</transform>\n"
 							<< "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
 							<< "\t</shape>" << endl;
+				cout << "Created " << objName << " for chunk " << chunkNb << endl;
 			//}
 		}
 		cout << "Objs for chunk " << chunkNb << " were created" << endl;

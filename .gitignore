@@ -71,3 +71,5 @@ docker-build.log
 
 #scenes
 /scene
+/subscene/*.obj
+/subscene/*.xml
