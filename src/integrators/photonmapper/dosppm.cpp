@@ -254,17 +254,49 @@ public:
 			chunks = tmp_chunks;
 		}
 		cout << endl;
+		createSubSceneTemplate(scene);
 		for(unsigned int i = 0; i < chunks.size(); i++){
 			createSubScene(scene, meshes, chunks[i], i);
 		}
 		cout << endl;
 	}
 
+	void createSubSceneTemplate(const Scene *scene){
+		
+		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
+	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
+
+		// Copy what we want from the original file, keep 
+
+		const char * src_file = scene->getSourceFile().string().c_str();
+		std::ifstream src(src_file);
+		std::ofstream sceneTemplate("/mitsuba/subscene/subSceneTemplate.xml");
+	    std::string line;
+	    std::string shape("<shape");
+		while(getline(src, line)) {
+		    if (line.find(shape, 0) != std::string::npos) {
+		        break;
+		    }else{
+		    	sceneTemplate << line << endl;
+		    }
+		}
+		//sceneTemplate << "<scene>" << endl;
+		src.close();
+		sceneTemplate.close();
+
+	}
+
 	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk, int chunkNb){
 		cout << chunk << endl;
-		/* 	1) create/get scene template
-			2) find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the scene
-		*/
+
+		// Copy template into new scene file
+		std::ifstream sceneTemplate("/mitsuba/subscene/subSceneTemplate.xml");
+		std::ostringstream scenePath;
+		scenePath << "/mitsuba/subscene/subscene" << chunkNb << ".xml";
+		std::ofstream subscene(scenePath.str().c_str());
+		subscene << sceneTemplate.rdbuf();
+
+		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
 
 		// Loop through the meshes
 		TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
@@ -281,7 +313,7 @@ public:
 			// Check if the mesh intersects the chunk 
 			/*cout << "chunkAABB: " << chunkAABB.toString() << endl;
 			cout << "meshAABB: " << meshes[mesh_id]->getAABB().toString() << endl;*/
-			if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
+			//if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
 				// If so, make an obj out of the triangles that intersect the chunk
 				//cout << mesh_id << endl;
 				Triangle * triangles = meshes[mesh_id]->getTriangles();
@@ -297,11 +329,11 @@ public:
 				}
 
 				for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
-					if(chunkAABB.overlaps(triangles[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
+					//if(chunkAABB.overlaps(triangles[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
 						f.push_back(triangles[tri_id].idx);
 						//cout << "triangles: " << f.back()[0] << " " << f.back()[1] << " " << f.back()[2] << endl;
 						//cout << "vertex: " << v.back().toString() << endl;
-					}
+					//}
 				}
 				
 				// Make a new .obj from that file
@@ -309,7 +341,9 @@ public:
 				std::ostringstream oss;
 				oss << "_obj" << mesh_id << ".obj";
 				objName += oss.str();
-				std::ofstream outfile (objName.c_str(), std::ofstream::trunc);
+				std::string path("");
+				path += "subscene/" + objName;
+				std::ofstream outfile (path.c_str(), std::ofstream::trunc);
 				std::string vstr("");
 				std::string vnstr("");
 				std::string vtstr("");
@@ -334,9 +368,21 @@ public:
 				outfile << vtstr << std::endl;
 				outfile << fstr << std::endl;
 				outfile.close();
-			}
+
+				const BSDF *bsdf = meshes[mesh_id]->getBSDF();
+				subscene 	<< "\t<shape type=\"obj\" >\n"
+							<< "\t\t<string name=\"filename\" value=\"" << objName << "\" />\n"
+							<< "\t\t<transform name=\"toWorld\" >\n"
+							<< "\t\t\t<matrix value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\"/>\n"
+							<< "\t\t</transform>\n"
+							<< "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
+							<< "\t</shape>" << endl;
+			//}
 		}
 		cout << "Objs for chunk " << chunkNb << " were created" << endl;
+		subscene << "</scene>" << endl;
+		sceneTemplate.close();
+		subscene.close();
 	}
 
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,

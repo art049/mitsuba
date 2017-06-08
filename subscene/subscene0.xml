@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<scene version="0.5.0" >
+	<integrator type="dosppm" >
+		<integer name="maxDepth" value="17" />
+	</integrator>
+	<sensor type="perspective" >
+		<float name="fov" value="55" />
+		<transform name="toWorld" >
+			<matrix value="-0.659198 0.0116337 -0.751879 0.00724053 0 0.99988 0.015471 0.912405 0.751969 0.0101985 -0.659119 -0.227584 0 0 0 1"/>
+		</transform>
+		<sampler type="sobol" >
+			<integer name="sampleCount" value="64" />
+		</sampler>
+		<film type="ldrfilm" >
+			<integer name="width" value="1024" />
+			<integer name="height" value="1024" />
+			<string name="fileFormat" value="png" />
+			<string name="pixelFormat" value="rgb" />
+			<float name="gamma" value="2.2" />
+			<boolean name="banner" value="false" />
+			<rfilter type="tent" />
+		</film>
+	</sensor>
+	<bsdf type="mask" id="Rug" >
+		<texture name="opacity" type="bitmap" >
+			<string name="filename" value="textures/rug_mask.png" />
+			<string name="filterType" value="trilinear" />
+		</texture>
+		<bsdf type="twosided" >
+			<bsdf type="diffuse" >
+				<texture name="reflectance" type="bitmap" >
+					<string name="filename" value="textures/rug.png" />
+					<string name="filterType" value="trilinear" />
+				</texture>
+			</bsdf>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Wood" >
+		<bsdf type="roughplastic" >
+			<float name="alpha" value="0.15" />
+			<string name="distribution" value="ggx" />
+			<float name="intIOR" value="1.5" />
+			<float name="extIOR" value="1" />
+			<boolean name="nonlinear" value="true" />
+			<texture name="diffuseReflectance" type="bitmap" >
+				<string name="filename" value="textures/wood.jpg" />
+				<string name="filterType" value="trilinear" />
+			</texture>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Mirror" >
+		<bsdf type="conductor" >
+			<string name="material" value="none" />
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="StainlessSmooth" >
+		<bsdf type="conductor" >
+			<float name="extEta" value="1" />
+			<rgb name="specularReflectance" value="1, 1, 1"/>
+			<rgb name="eta" value="1.65746, 0.880369, 0.521229"/>
+			<rgb name="k" value="9.22387, 6.26952, 4.837"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Bathtube" >
+		<bsdf type="plastic" >
+			<float name="intIOR" value="1.5" />
+			<float name="extIOR" value="1" />
+			<boolean name="nonlinear" value="true" />
+			<rgb name="diffuseReflectance" value="0.612066, 0.612066, 0.612066"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="StainlessRough" >
+		<bsdf type="roughconductor" >
+			<float name="alpha" value="0.1" />
+			<string name="distribution" value="ggx" />
+			<float name="extEta" value="1" />
+			<rgb name="specularReflectance" value="1, 1, 1"/>
+			<rgb name="eta" value="1.65746, 0.880369, 0.521229"/>
+			<rgb name="k" value="9.22387, 6.26952, 4.837"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="bumpmap" >
+		<texture name="map" type="bitmap" >
+			<string name="filename" value="textures/floor_tiles.png" />
+			<string name="filterType" value="trilinear" />
+			<float name="gamma" value="1.0"/>
+		</texture>
+		<bsdf type="twosided" id="Floor" >
+			<bsdf type="roughplastic" >
+				<float name="alpha" value="0.2" />
+				<string name="distribution" value="ggx" />
+				<float name="intIOR" value="1.5" />
+				<float name="extIOR" value="1" />
+				<boolean name="nonlinear" value="true" />
+				<texture name="diffuseReflectance" type="bitmap" >
+					<string name="filename" value="textures/floor_tiles.png" />
+					<string name="filterType" value="trilinear" />
+				</texture>
+			</bsdf>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Pots" >
+		<bsdf type="roughplastic" >
+			<float name="alpha" value="0.1" />
+			<string name="distribution" value="ggx" />
+			<float name="intIOR" value="1.5" />
+			<float name="extIOR" value="1" />
+			<boolean name="nonlinear" value="true" />
+			<rgb name="diffuseReflectance" value="0.00631, 0.00631, 0.00631"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Marble" >
+		<bsdf type="diffuse" >
+			<texture name="reflectance" type="bitmap" >
+				<string name="filename" value="textures/marble.jpg" />
+				<string name="filterType" value="trilinear" />
+			</texture>
+		</bsdf>
+	</bsdf>
+	<bsdf type="thindielectric" id="BulbGlass" >
+		<float name="intIOR" value="1.5" />
+		<float name="extIOR" value="1" />
+	</bsdf>
+	<bsdf type="twosided" id="BlackPlastic" >
+		<bsdf type="roughplastic" >
+			<float name="alpha" value="0.2" />
+			<string name="distribution" value="ggx" />
+			<float name="intIOR" value="1.5" />
+			<float name="extIOR" value="1" />
+			<boolean name="nonlinear" value="true" />
+			<rgb name="diffuseReflectance" value="0.00631, 0.00631, 0.00631"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Blinds" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.893289, 0.893289, 0.893289"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="WoodFrame" >
+		<bsdf type="diffuse" >
+			<texture name="reflectance" type="bitmap" >
+				<string name="filename" value="textures/wood2.jpg" />
+				<string name="filterType" value="trilinear" />
+			</texture>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Painting3" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.0581872, 0.0342302, 0.0179364"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Painting1" >
+		<bsdf type="diffuse" >
+			<texture name="reflectance" type="bitmap" >
+				<string name="filename" value="textures/picture1.jpg" />
+				<string name="filterType" value="trilinear" />
+			</texture>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Painting4" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.0477758, 0.0209511, 0.00715504"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Light" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0, 0, 0"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="GreyWall" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.893289, 0.893289, 0.893289"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="WhiteWood" >
+		<bsdf type="roughplastic" >
+			<float name="alpha" value="0.1" />
+			<string name="distribution" value="ggx" />
+			<float name="intIOR" value="1.5" />
+			<float name="extIOR" value="1" />
+			<boolean name="nonlinear" value="true" />
+			<rgb name="diffuseReflectance" value="0.893289, 0.893289, 0.893289"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Ceiling" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.684615, 0.684615, 0.684615"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Wallpaper" >
+		<bsdf type="diffuse" >
+			<texture name="reflectance" type="bitmap" >
+				<string name="filename" value="textures/wallpaper-1.jpg" />
+				<string name="filterType" value="trilinear" />
+			</texture>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Leaves" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.573159, 0.215764, 0.022013"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="LeaveStems" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.0638149, 0.022013, 0.00120174"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Vase" >
+		<bsdf type="plastic" >
+			<float name="intIOR" value="1.5" />
+			<float name="extIOR" value="1" />
+			<boolean name="nonlinear" value="true" />
+			<rgb name="diffuseReflectance" value="0.612066, 0.612066, 0.612066"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="WindowFrame" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.00631, 0.00631, 0.00631"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Paper" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.578596, 0.578596, 0.578596"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="WoodDiffuse" >
+		<bsdf type="diffuse" >
+			<texture name="reflectance" type="bitmap" >
+				<string name="filename" value="textures/wood.jpg" />
+				<string name="filterType" value="trilinear" />
+			</texture>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Painting2" >
+		<bsdf type="diffuse" >
+			<texture name="reflectance" type="bitmap" >
+				<string name="filename" value="textures/wallpaper-2.jpg" />
+				<string name="filterType" value="trilinear" />
+			</texture>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="MetalPlate" >
+		<bsdf type="roughconductor" >
+			<float name="alpha" value="0.05" />
+			<string name="distribution" value="ggx" />
+			<float name="extEta" value="1" />
+			<rgb name="specularReflectance" value="0.4259, 0.4259, 0.4259"/>
+			<rgb name="eta" value="1.65746, 0.880369, 0.521229"/>
+			<rgb name="k" value="9.22387, 6.26952, 4.837"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="BlindsString" >
+		<bsdf type="diffuse" >
+			<rgb name="reflectance" value="0.578596, 0.578596, 0.578596"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="Gold" >
+		<bsdf type="roughconductor" >
+			<float name="alpha" value="0.1" />
+			<string name="distribution" value="ggx" />
+			<float name="extEta" value="1" />
+			<rgb name="specularReflectance" value="1, 1, 1"/>
+			<rgb name="eta" value="1.64847, 1.15045, 1.37978"/>
+			<rgb name="k" value="3.36846, 1.94349, 1.10201"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="bumpmap" >
+		<texture name="map" type="bitmap" >
+			<string name="filename" value="textures/foam_bump.jpg" />
+			<string name="filterType" value="trilinear" />
+			<float name="gamma" value="1.0"/>
+		</texture>
+		<bsdf type="twosided" id="Foam" >
+			<bsdf type="diffuse" >
+				<rgb name="reflectance" value="0.531049, 0.531049, 0.531049"/>
+			</bsdf>
+		</bsdf>
+	</bsdf>
+	<shape type="obj" >
+		<string name="filename" value="chunk0_obj0.obj" />
+		<transform name="toWorld" >
+			<matrix value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+		</transform>
+		<ref id="StainlessRough" />
+	</shape>
+	<shape type="obj" >
+		<string name="filename" value="chunk0_obj1.obj" />
+		<transform name="toWorld" >
+			<matrix value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+		</transform>
+		<ref id="StainlessSmooth" />
+	</shape>
+	<shape type="obj" >
+		<string name="filename" value="chunk0_obj2.obj" />
+		<transform name="toWorld" >
+			<matrix value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+		</transform>
+		<ref id="Foam" />
+	</shape>
+	<shape type="obj" >
+		<string name="filename" value="chunk0_obj3.obj" />
+		<transform name="toWorld" >
+			<matrix value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+		</transform>
+		<ref id="WhiteWood" />
+	</shape>
+	<shape type="obj" >
+		<string name="filename" value="chunk0_obj4.obj" />
+		<transform name="toWorld" >
+			<matrix value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+		</transform>
+		<ref id="WhiteWood" />
+	</shape>
+	<shape type="obj" >
+		<string name="filename" value="chunk0_obj5.obj" />
+		<transform name="toWorld" >
+			<matrix value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+		</transform>
+		<ref id="WhiteWood" />
+	</shape>
