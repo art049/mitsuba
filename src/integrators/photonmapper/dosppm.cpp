@@ -266,8 +266,12 @@ public:
 		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
 	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
 
-		// Copy what we want from the original file, keep 
+		// Create a subscene folder
+		std::string folderPath("/mitsuba/subscene/");
+		boost::filesystem::path dir(folderPath.c_str());
+		boost::filesystem::create_directory(dir);
 
+		// Copy what we want from the original file, keep 
 		const char * src_file = scene->getSourceFile().string().c_str();
 		std::ifstream src(src_file);
 		std::ofstream sceneTemplate("/mitsuba/subscene/subSceneTemplate.xml");
@@ -289,10 +293,19 @@ public:
 	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk, int chunkNb){
 		cout << chunk << endl;
 
+		// Create directory for this subscene
+		std::string folderPath("");
+		std::ostringstream oss;
+		oss << "subscene/sub" << chunkNb << "/";
+		folderPath += oss.str();
+		oss.str("");
+		boost::filesystem::path dir(folderPath.c_str());
+		boost::filesystem::create_directory(dir);
+
 		// Copy template into new scene file
 		std::ifstream sceneTemplate("/mitsuba/subscene/subSceneTemplate.xml");
 		std::ostringstream scenePath;
-		scenePath << "/mitsuba/subscene/subscene" << chunkNb << ".xml";
+		scenePath << folderPath << "subscene" << chunkNb << ".xml";
 		std::ofstream subscene(scenePath.str().c_str());
 		subscene << sceneTemplate.rdbuf();
 
@@ -301,7 +314,6 @@ public:
 		// Loop through the meshes
 		TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
 		std::string chunkName("chunk");
-		std::ostringstream oss;
 		oss << chunkNb;
 		chunkName += oss.str();
 
@@ -323,9 +335,9 @@ public:
 				std::ostringstream oss;
 				oss << "_obj" << mesh_id << ".obj";
 				objName += oss.str();
-				std::string path("");
-				path += "subscene/" + objName;
-				std::ofstream outfile (path.c_str(), std::ofstream::trunc);
+				oss.str("");
+
+				std::ofstream outfile ((folderPath + objName).c_str(), std::ofstream::trunc);
 				std::string vstr("");
 				std::string vnstr("");
 				std::string vtstr("");
