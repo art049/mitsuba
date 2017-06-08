@@ -327,7 +327,9 @@ public:
 				//cout << mesh_id << endl;
 				Triangle * f = meshes[mesh_id]->getTriangles();
 				Normal * vn = meshes[mesh_id]->getVertexNormals();
+				bool hasVertexNormals = meshes[mesh_id]->hasVertexNormals();
 				Point2 * vt = meshes[mesh_id]->getVertexTexcoords();
+				bool hasVertexTexcoords = meshes[mesh_id]->hasVertexTexcoords();
 			 	Point * v = meshes[mesh_id]->getVertexPositions();
 				
 				// Make a new .obj from that file
@@ -345,24 +347,23 @@ public:
 				
 				cout << "Processing " << objName << " with " << meshes[mesh_id]->getVertexCount() << " vertices" << endl;
 				for(unsigned int i=0; i<meshes[mesh_id]->getVertexCount(); i++){
-					if(i%5000 == 0)
-						cout << "BF " << objName << " " << i << " vt" << endl;
 
+					// Add vertices to the .obj
 					std::ostringstream oss;
 					oss << "v " << v[i][0] << " " << v[i][1] << " " << v[i][2] << "\n";
 					vstr += oss.str();
 					oss.str("");
-					if(i%5000 == 0)
-						cout << "AFV " << objName << " " << i << " vt" << endl;
-					oss << "vn " << vn[i][0] << " " << vn[i][1] << " " << vn[i][2] << "\n";
-					vnstr += oss.str();
-					oss.str("");
-					if(i%5000 == 0)
-						cout << "AFVN " << objName << " " << i << " vt" << endl;
-					oss << "vt " << vt[i][0] << " " << vt[i][1] << "\n";
-					vtstr += oss.str();
-					if(i%5000 == 0)
-						cout << "AF " << objName << " " << i << " vt" << endl;
+					// Check for segfaults then add vertices normals to the .obj
+					if(hasVertexNormals){
+						oss << "vn " << vn[i][0] << " " << vn[i][1] << " " << vn[i][2] << "\n";
+						vnstr += oss.str();
+						oss.str("");
+					}
+					// Check for segfaults then add vertices tex coords to the .obj
+					if(hasVertexTexcoords){
+						oss << "vt " << vt[i][0] << " " << vt[i][1] << "\n";
+						vtstr += oss.str();
+					}
 				}
 
 				cout << "past vertices" << endl;
