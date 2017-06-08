@@ -300,7 +300,6 @@ public:
 	}
 
 	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk, int chunkNb){
-		cout << chunk << endl;
 
 		// Create directory for this subscene
 		std::string folderPath("");
@@ -339,7 +338,7 @@ public:
 			// Check if the mesh intersects the chunk 
 			/*cout << "chunkAABB: " << chunkAABB.toString() << endl;
 			cout << "meshAABB: " << meshes[mesh_id]->getAABB().toString() << endl;*/
-			//if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
+			if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
 				// If so, make an obj out of the triangles that intersect the chunk
 				//cout << mesh_id << endl;
 				Triangle * f = meshes[mesh_id]->getTriangles();
@@ -382,10 +381,12 @@ public:
 					}
 				}
 
-				for(unsigned int i=0; i<meshes[mesh_id]->getTriangleCount(); i++){
-					std::ostringstream oss;
-					oss << "f " << f[i].idx[0] << "/" << f[i].idx[0] << "/" << f[i].idx[0] << " " << f[i].idx[1] << "/" << f[i].idx[1] << "/" << f[i].idx[1] << " " << f[i].idx[2] << "/" << f[i].idx[2] << "/" << f[i].idx[2] << "\n";
-					fstr += oss.str();
+				for(unsigned int tri_id=0; tri_id<meshes[mesh_id]->getTriangleCount(); tri_id++){
+					if(chunkAABB.overlaps(f[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
+						std::ostringstream oss;
+						oss << "f " << f[tri_id].idx[0] << "/" << f[tri_id].idx[0] << "/" << f[tri_id].idx[0] << " " << f[tri_id].idx[1] << "/" << f[tri_id].idx[1] << "/" << f[tri_id].idx[1] << " " << f[tri_id].idx[2] << "/" << f[tri_id].idx[2] << "/" << f[tri_id].idx[2] << "\n";
+						fstr += oss.str();
+					}
 				}
 					
 				
@@ -405,7 +406,7 @@ public:
 							<< "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
 							<< "\t</shape>" << endl;
 				cout << "Created " << objName << endl;
-			//}
+			}
 		}
 		cout << "Objs for chunk " << chunkNb << " were created\n" << endl;
 		subscene << "</scene>" << endl;

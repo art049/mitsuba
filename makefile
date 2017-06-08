@@ -1,5 +1,5 @@
 COMMANDS = "source setpath.sh; bash"
-RUN_COMMANDS = "source setpath.sh; mitsuba scene/bathroom/scene.xml; bash"
+RUN_COMMANDS = "source setpath.sh; mitsuba scene/teapot/scene.xml; bash"
 
 .PHONY: build
 build: Makefile dockerbuild.log
@@ -19,7 +19,6 @@ render: commands interactive
 .PHONY: commands 
 commands:
 	rm -f *.log
-	#rm -rf subscene/*
 	$(eval COMMANDS = $(RUN_COMMANDS))
 
 .PHONY: interactive 
