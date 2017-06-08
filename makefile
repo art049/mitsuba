@@ -14,7 +14,7 @@ webrun: build
 	./docker_env/run.sh -c mitsuba-web-gui -i mitsuba
 
 .PHONY: render
-render: commands interactive
+render: build commands interactive
 
 .PHONY: commands 
 commands:
