@@ -27,12 +27,13 @@ void computeStats();
 void clientFirstHandshake(zmq::socket_t * socket);
 void sendGoSignal(vector < zmq::socket_t * > sockets);
 
+string scriptName = "getServerAddress.sh";
+
 int main () {
 	
-	/*executeScript("chmod +x getServerAddress.sh");
-    std::string servAdress = executeScript("./getServerAddress.sh");
+	std::string pipeau = executeScript("chmod +x " + scriptName + " && echo ok");
+    std::string servAdress = executeScript("./" + scriptName);
     cout << "servAdress " << servAdress << endl;
-    cout << endl;*/
 
     vector < zmq::socket_t * > sockets;
     vector<zmq::pollitem_t> items;
@@ -68,7 +69,6 @@ int main () {
 
     // Let's compute the stats
     computeStats();
-
 
     //close all sockets 
 
