@@ -15,6 +15,12 @@
 
 using namespace std;
 
+struct socketPollingInfo {
+    vector < zmq::socket_t * > sockets;
+    vector < zmq::pollitem_t > items;
+    zmq::socket_t * socket;
+};
+
 std::string executeScript(std::string script);
 void * receiveData(void * arg);
 void computeStats();
@@ -22,40 +28,46 @@ void clientFirstHandshake(zmq::socket_t * socket);
 
 int main () {
 
-    std::string servAdress = executeScript("./getServerAddress.sh");
-    cout << "servAdress " << servAdress << endl; 
+    /*std::string servAdress = executeScript("./getServerAddress.sh");
+    cout << "servAdress " << servAdress << endl;*/
+    cout << endl;
 
     vector < zmq::socket_t * > sockets;
-    std::vector<zmq::pollitem_t> items;
+    vector<zmq::pollitem_t> items;
     zmq::context_t context (1);
+
     for(unsigned int i=0; i<NB_CHUNKS; i++){
-        std::string address = "tcp://*:" + to_string(5555+i+1);
-        zmq::socket_t socket(context, ZMQ_PAIR);
-        socket.bind (address.c_str());
+        std::string address = "tcp://*: " + to_string(5555+i+1);
+        cout << "Creating client " << i << " socket at: " << address << endl;
         
-        sockets.push_back(&socket);
+        zmq::socket_t * socket = new zmq::socket_t(context, ZMQ_PAIR);
+        socket->bind(address.c_str());
+        
+        sockets.push_back(socket);
         zmq::pollitem_t item = {static_cast<void *>(*(sockets[i])), 0, ZMQ_POLLIN, 0};
         items.push_back(item);
     }
 
-    //  Initialize poll set
-    /*std::vector<zmq::pollitem_t> items =  {
-        {static_cast<void *>(*(sockets[0])), 0, ZMQ_POLLIN, 0},
-        {static_cast<void *>(*(sockets[1])), 0, ZMQ_POLLIN, 0}
-    };*/
-
     //  Prepare our context and socket
+    cout << "Creating handshake socket at tcp://*:5555\n" << endl;
     zmq::socket_t socket (context, ZMQ_REP);
     socket.bind ("tcp://*:5555");
 
     clientFirstHandshake(&socket);
+    socket.close();
+    cout << "CLOSING HANDSHAKE SOCKET\n" << endl;
 
-    // Let's receive the incoming data
+    // Let's receive the incoming data from all the clients
+    socketPollingInfo infos = {sockets, items};
     pthread_t receiveDataThread;
-    pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&socket));
+    pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&infos));
 
     // Let's compute the stats
     computeStats();
+
+
+    context.close();
+    //close all sockets 
 
     return 0;
 }
@@ -99,29 +111,42 @@ std::string executeScript(std::string script){
 }
 
 void * receiveData(void * arg){
-    zmq::socket_t * socket((zmq::socket_t *)arg);
-    while (true) {
-        zmq::message_t request;
+    
+    socketPollingInfo infos = *((socketPollingInfo *)arg);
+    vector < zmq::pollitem_t > items = infos.items;
+    vector < zmq::socket_t * > sockets = infos.sockets;
+    
+    // Poll through the messages
+    while (1) {
+        zmq::message_t message;
+        int itemsSize = items.size();
+        zmq::poll(items.data(), itemsSize, -1);
 
-        //  Wait for next request from client
-        socket->recv(&request);
-        std::string rpl = std::string(static_cast<char*>(request.data()), request.size());
-        std::cout << "Received \"" << rpl << "\"" << std::endl;
+        for(int i=0; i<itemsSize; i++){
+            // Check if that client sent a message
+            if (items[i].revents & ZMQ_POLLIN) {
+                sockets[i]->recv(&message);
+                std::string rpl = std::string(static_cast<char*>(message.data()), message.size());
+                std::cout << "Received \"" << rpl << "\" from " << i << std::endl;
 
-        //  Send reply back to client
-        std::string replyStr = "Obj received";
-        int size = replyStr.size();
-        zmq::message_t reply(size);
-        memcpy(reply.data (), replyStr.c_str(), size);
-        socket->send(reply);
+                //  Send reply back to client
+                std::string replyStr = "Obj received";
+                int size = replyStr.size();
+                zmq::message_t reply(size);
+                memcpy(reply.data (), replyStr.c_str(), size);
+                sockets[i]->send(reply);
+            }
+        }
+        
     }
+
     pthread_exit (NULL);
     return NULL;
 }
 
 void computeStats(){
     while(1){
-        cout << "Crunching numbers, grr..." << endl;
+        cout << "Crunching numbers, grr...\n" << endl;
         sleep(5);
     }
 }

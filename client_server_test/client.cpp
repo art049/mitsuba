@@ -35,7 +35,7 @@ int main (int argc, char * argv[])
     zmq::context_t context (1);
     zmq::socket_t handshakeSocket (context, ZMQ_REQ);
 
-    cout << "Connecting to " << servAddr << endl;
+    cout << "\nConnecting to server handshake socket at: " << servAddr << "\n" << endl;
     handshakeSocket.connect (servAddr);
 
     int portNbr = getPortNumber(&handshakeSocket);
@@ -44,6 +44,7 @@ int main (int argc, char * argv[])
     servAddr = "tcp://" + string(argv[1]) + ":" + to_string(portNbr);
     zmq::socket_t socket2 (context, ZMQ_PAIR);
     socket2.connect (servAddr);
+    cout << "CONNECTING TO SERVER SOCKET AT " << servAddr << "\n" << endl;
 
     // Let's receive the incoming data
     pthread_t receiveDataThread;
@@ -106,5 +107,6 @@ void mainCycle(zmq::socket_t * socket){
             std::cout << i << " - Sending obj " << objStr << std::endl;
             socket->send (message);
         }
+        cout << endl;
     }
 }
