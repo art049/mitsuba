@@ -27,10 +27,11 @@ void computeStats();
 void clientFirstHandshake(zmq::socket_t * socket);
 
 int main () {
-
+	
+	/*executeScript("chmod +x getServerAddress.sh");
     std::string servAdress = executeScript("./getServerAddress.sh");
     cout << "servAdress " << servAdress << endl;
-    cout << endl;
+    cout << endl;*/
 
     vector < zmq::socket_t * > sockets;
     vector<zmq::pollitem_t> items;
@@ -66,7 +67,6 @@ int main () {
     computeStats();
 
 
-    context.close();
     //close all sockets 
 
     return 0;
@@ -89,11 +89,20 @@ void clientFirstHandshake(zmq::socket_t * socket){
             memcpy(reply.data (), replyStr.c_str(), size);
             socket->send(reply);
             std::cout << "Assigned port number " << 5555 + i + 1 << std::endl;
+            socket->recv(&request);
         }else{
             cout << "ERROR, wrong handshake received" << endl;
         }
     }
-    cout << "ALL CLIENTS WERE ASSIGNED A PORT NUMBER" << endl; 
+    cout << "ALL CLIENTS WERE ASSIGNED A PORT NUMBER, SENDING GO SIGNAL" << endl;
+    
+    for(unsigned int i=0; i<NB_CHUNKS; i++){
+        std::string signalStr = "GO";
+        int size = signalStr.size();
+       	zmq::message_t signal(size);
+        memcpy(signal.data (), signalStr.c_str(), size);
+        socket->send(signal);      
+    } 
 }
 
 std::string executeScript(std::string script){

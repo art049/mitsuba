@@ -36,21 +36,30 @@ int main (int argc, char * argv[])
     zmq::socket_t handshakeSocket (context, ZMQ_REQ);
 
     cout << "\nConnecting to server handshake socket at: " << servAddr << "\n" << endl;
-    handshakeSocket.connect (servAddr);
+    handshakeSocket.connect(servAddr.c_str());
 
     int portNbr = getPortNumber(&handshakeSocket);
     handshakeSocket.close();
     
+    cout << "CONNECTING TO SERVER SOCKET AT " << servAddr << endl;
     servAddr = "tcp://" + string(argv[1]) + ":" + to_string(portNbr);
-    zmq::socket_t socket2 (context, ZMQ_PAIR);
-    socket2.connect (servAddr);
-    cout << "CONNECTING TO SERVER SOCKET AT " << servAddr << "\n" << endl;
-
-    // Let's receive the incoming data
-    pthread_t receiveDataThread;
-    pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&socket2));
-
-    mainCycle(&socket2);
+    zmq::socket_t communicationSocket (context, ZMQ_PAIR);
+    communicationSocket.connect (servAddr.c_str());
+    
+    cout << "WAITING FOR OTHERS TO CONNECT " << "\n" << endl;
+   	zmq::message_t reply;
+    communicationSocket.recv(&reply);
+    std::string rpl = std::string(static_cast<char*>(reply.data()), reply.size());
+    
+    if(rpl.compare("GO")!=0){
+    	cout << "ERROR: something went wrong on the server" << endl;
+        return -1;
+    }else{
+		// Let's receive the incoming data
+		pthread_t receiveDataThread;
+		pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&communicationSocket));
+		mainCycle(&communicationSocket);
+	}
 
     return 0;
 }
@@ -71,8 +80,16 @@ int getPortNumber(zmq::socket_t * socket){
     std::string rpl = std::string(static_cast<char*>(reply.data()), reply.size());
     //std::cout << "Received \"" << rpl << "\"" << std::endl;
     int portNbr = stoi(rpl);
-
     cout << "RECEIVED PORT NUMBER " << portNbr << endl;
+    
+    // Confirm to the server we're all set
+    requestStr = "OK";
+    size = requestStr.size();
+    zmq::message_t confirmation(size);
+    memcpy(confirmation.data (), requestStr.c_str(), size);
+    socket->send(confirmation);
+
+    
     return portNbr; 
 }
 
