@@ -25,6 +25,7 @@ std::string executeScript(std::string script);
 void * receiveData(void * arg);
 void computeStats();
 void clientFirstHandshake(zmq::socket_t * socket);
+void sendGoSignal(vector < zmq::socket_t * > sockets);
 
 int main () {
 	
@@ -55,8 +56,10 @@ int main () {
     socket.bind ("tcp://*:5555");
 
     clientFirstHandshake(&socket);
+    cout << "CLOSING HANDSHAKE SOCKET" << endl;
     socket.close();
-    cout << "CLOSING HANDSHAKE SOCKET\n" << endl;
+
+    sendGoSignal(sockets);
 
     // Let's receive the incoming data from all the clients
     socketPollingInfo infos = {sockets, items};
@@ -71,6 +74,20 @@ int main () {
 
     return 0;
 }
+
+void sendGoSignal(vector < zmq::socket_t * > sockets){
+    cout << "SENDING GO SIGNAL" << endl;
+    for(unsigned int i=0; i<sockets.size(); i++){
+        std::string signalStr = "GO";
+        int size = signalStr.size();
+        zmq::message_t signal(size);
+        memcpy(signal.data (), signalStr.c_str(), size);
+        sockets[i]->send(signal);      
+    }
+    cout << "DONE\n" << endl; 
+}
+
+
 
 void clientFirstHandshake(zmq::socket_t * socket){
     cout << "WAITING FOR ALL " << NB_CHUNKS << " CLIENTS TO HANDSHAKE" << endl; 
@@ -89,20 +106,11 @@ void clientFirstHandshake(zmq::socket_t * socket){
             memcpy(reply.data (), replyStr.c_str(), size);
             socket->send(reply);
             std::cout << "Assigned port number " << 5555 + i + 1 << std::endl;
-            socket->recv(&request);
         }else{
             cout << "ERROR, wrong handshake received" << endl;
         }
     }
-    cout << "ALL CLIENTS WERE ASSIGNED A PORT NUMBER, SENDING GO SIGNAL" << endl;
-    
-    for(unsigned int i=0; i<NB_CHUNKS; i++){
-        std::string signalStr = "GO";
-        int size = signalStr.size();
-       	zmq::message_t signal(size);
-        memcpy(signal.data (), signalStr.c_str(), size);
-        socket->send(signal);      
-    } 
+    cout << "ALL CLIENTS WERE ASSIGNED A PORT NUMBER" << endl;
 }
 
 std::string executeScript(std::string script){

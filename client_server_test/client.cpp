@@ -46,10 +46,11 @@ int main (int argc, char * argv[])
     zmq::socket_t communicationSocket (context, ZMQ_PAIR);
     communicationSocket.connect (servAddr.c_str());
     
-    cout << "WAITING FOR OTHERS TO CONNECT " << "\n" << endl;
+    cout << "WAITING FOR OTHERS TO CONNECT " << endl;
    	zmq::message_t reply;
     communicationSocket.recv(&reply);
     std::string rpl = std::string(static_cast<char*>(reply.data()), reply.size());
+    cout << "LET'S GO!" << "\n" << endl;
     
     if(rpl.compare("GO")!=0){
     	cout << "ERROR: something went wrong on the server" << endl;
@@ -81,15 +82,7 @@ int getPortNumber(zmq::socket_t * socket){
     //std::cout << "Received \"" << rpl << "\"" << std::endl;
     int portNbr = stoi(rpl);
     cout << "RECEIVED PORT NUMBER " << portNbr << endl;
-    
-    // Confirm to the server we're all set
-    requestStr = "OK";
-    size = requestStr.size();
-    zmq::message_t confirmation(size);
-    memcpy(confirmation.data (), requestStr.c_str(), size);
-    socket->send(confirmation);
 
-    
     return portNbr; 
 }
 
