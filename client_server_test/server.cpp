@@ -28,8 +28,8 @@ void clientFirstHandshake(zmq::socket_t * socket);
 
 int main () {
 
-    /*std::string servAdress = executeScript("./getServerAddress.sh");
-    cout << "servAdress " << servAdress << endl;*/
+    std::string servAdress = executeScript("./getServerAddress.sh");
+    cout << "servAdress " << servAdress << endl;
     cout << endl;
 
     vector < zmq::socket_t * > sockets;
