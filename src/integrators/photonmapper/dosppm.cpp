@@ -621,6 +621,9 @@ public:
 
 					while (true) {
 						if (scene->rayIntersect(ray, gatherPoint.its)) {
+							
+							// TODO: CHECK IF PORTAIL?
+
 							if (gatherPoint.its.isEmitter())
 								gatherPoint.emission += weight * gatherPoint.its.Le(-ray.d);
 
