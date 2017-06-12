@@ -22,7 +22,7 @@
 #include <mitsuba/render/renderqueue.h>
 
 #include <iostream>
-#include <fstream> 
+#include <fstream>
 #include <string>
 
 #include <utility>
@@ -183,7 +183,7 @@ public:
 	}
 
 	void subdivide_scene(const Scene *scene){
-		
+
 		// COMPUTE SCENE BB
 		//cout << scene->toString() << "\n" << endl;
 		AABB sceneBox = scene->getAABB();
@@ -214,7 +214,7 @@ public:
 		n_cell[1] /= n_cell[0];
 		cout << "NX:" << n_cell[0] << " NY:"<< n_cell[1] << " NZ:"<< n_cell[2] << endl;
 		cout << "Cells : " << cells.size() << endl;
-		
+
 		// COMPUTE POLYGON NUMBER PER CELL
 		std::vector<unsigned int> poly_count(cells.size());
 		std::vector<TriMesh*> meshes = scene->getMeshes();
@@ -235,7 +235,7 @@ public:
 		}
 		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++)
 		  cout << "Cell " << cell_id << " has " << poly_count[cell_id] << " polygons" << endl;
-		
+
 
 		// BUILD CHUNKS
 		int split_depth = 3;
@@ -270,20 +270,20 @@ public:
 	}
 
 	void createSubSceneTemplate(const Scene *scene){
-		
+
 		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
 	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
 
 		// Create the subscene folder and recreate it
-		std::string folderPath("/mitsuba/subscene/");
+		std::string folderPath("./subscene/");
 		fs::path dir(folderPath.c_str());
 		fs::remove_all(folderPath);
 		fs::create_directory(dir);
 
-		// Copy what we want from the original file, keep 
+		// Copy what we want from the original file, keep
 		const char * src_file = scene->getSourceFile().string().c_str();
 		std::ifstream src(src_file);
-		std::ofstream sceneTemplate("/mitsuba/subscene/subSceneTemplate.xml");
+		std::ofstream sceneTemplate("./subscene/subSceneTemplate.xml");
 	    std::string line;
 	    std::string shape("<shape");
 		while(getline(src, line)) {
@@ -319,7 +319,7 @@ public:
 		copyDir(source,dest);
 
 		// Copy template into new scene file
-		std::ifstream sceneTemplate("/mitsuba/subscene/subSceneTemplate.xml");
+		std::ifstream sceneTemplate("./subscene/subSceneTemplate.xml");
 		std::ostringstream scenePath;
 		scenePath << folderPath << "subscene" << chunkNb << ".xml";
 		std::ofstream subscene(scenePath.str().c_str());
@@ -334,9 +334,9 @@ public:
 		chunkName += oss.str();
 
 		for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
-			
-			// Check if the mesh intersects the chunk 
-			
+
+			// Check if the mesh intersects the chunk
+
 			// @Arthur: tester si le mesh intersecte le chunk => ce test seul est déjà éliminatoire
 			if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
 				// If so, make an obj out of the triangles that intersect the chunk
@@ -347,7 +347,7 @@ public:
 				Point2 * vt = meshes[mesh_id]->getVertexTexcoords();
 				bool hasVertexTexcoords = meshes[mesh_id]->hasVertexTexcoords();
 			 	Point * v = meshes[mesh_id]->getVertexPositions();
-				
+
 				// Make a new .obj from that file
 				std::string objName(chunkName);
 				std::ostringstream oss;
@@ -360,7 +360,7 @@ public:
 				std::string vnstr("");
 				std::string vtstr("");
 				std::string fstr("");
-				
+
 				for(unsigned int i=0; i<meshes[mesh_id]->getVertexCount(); i++){
 
 					// Add vertices to the .obj
@@ -389,8 +389,8 @@ public:
 						fstr += oss.str();
 					}
 				}
-					
-				
+
+
 				//cout << vnstr << endl;
 				outfile << vstr << std::endl;
 				outfile << vnstr << std::endl;
@@ -621,7 +621,7 @@ public:
 
 					while (true) {
 						if (scene->rayIntersect(ray, gatherPoint.its)) {
-							
+
 							// TODO: CHECK IF PORTAIL?
 
 							if (gatherPoint.its.isEmitter())

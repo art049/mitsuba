@@ -6,7 +6,7 @@
 #include <zmq.hpp>
 #include <string>
 #include <iostream>
-#include <sstream> 
+#include <sstream>
 #include <string>
 
 #ifndef _WIN32
@@ -40,18 +40,18 @@ int main (int argc, char * argv[])
 
     int portNbr = getPortNumber(&handshakeSocket);
     handshakeSocket.close();
-    
-    cout << "CONNECTING TO SERVER SOCKET AT " << servAddr << endl;
+
+    cout << "CONNECTING TO SERVER SOCKET AT PORT " << portNbr << endl;
     servAddr = "tcp://" + string(argv[1]) + ":" + to_string(portNbr);
     zmq::socket_t communicationSocket (context, ZMQ_PAIR);
     communicationSocket.connect (servAddr.c_str());
-    
+
     cout << "WAITING FOR OTHERS TO CONNECT " << endl;
    	zmq::message_t reply;
     communicationSocket.recv(&reply);
     std::string rpl = std::string(static_cast<char*>(reply.data()), reply.size());
     cout << "LET'S GO!" << "\n" << endl;
-    
+
     if(rpl.compare("GO")!=0){
     	cout << "ERROR: something went wrong on the server" << endl;
         return -1;
@@ -66,8 +66,8 @@ int main (int argc, char * argv[])
 }
 
 int getPortNumber(zmq::socket_t * socket){
-    cout << "ASKING SERVER FOR PORT NUMBER" << endl; 
-    
+    cout << "ASKING SERVER FOR PORT NUMBER" << endl;
+
     //  Ask the server for our port
     std::string requestStr = "firstHandShake";
     int size = requestStr.size();
@@ -83,7 +83,7 @@ int getPortNumber(zmq::socket_t * socket){
     int portNbr = stoi(rpl);
     cout << "RECEIVED PORT NUMBER " << portNbr << endl;
 
-    return portNbr; 
+    return portNbr;
 }
 
 void * receiveData(void * arg){
@@ -111,7 +111,7 @@ void mainCycle(zmq::socket_t * socket){
         for (int i = 0; i != 10; i++) {
             std::string objStr = "Photon/Ray " + to_string(i);
             int size = objStr.size();
-            
+
             zmq::message_t message (size);
             memcpy (message.data (), objStr.c_str(), size);
             std::cout << i << " - Sending obj " << objStr << std::endl;
