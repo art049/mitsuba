@@ -42,7 +42,9 @@ int main (int argc, char * argv[])
     handshakeSocket.close();
 
     cout << "CONNECTING TO SERVER SOCKET AT PORT " << portNbr << endl;
-    servAddr = "tcp://" + string(argv[1]) + ":" + to_string(portNbr);
+    std::ostringstream oss;
+    oss << "tcp://" << argv[1] << ":" << portNbr;
+    servAddr = oss.str();
     zmq::socket_t communicationSocket (context, ZMQ_PAIR);
     communicationSocket.connect (servAddr.c_str());
 
@@ -80,7 +82,8 @@ int getPortNumber(zmq::socket_t * socket){
     socket->recv(&reply);
     std::string rpl = std::string(static_cast<char*>(reply.data()), reply.size());
     //std::cout << "Received \"" << rpl << "\"" << std::endl;
-    int portNbr = stoi(rpl);
+    int portNbr;
+    std::istringstream(rpl) >> portNbr;
     cout << "RECEIVED PORT NUMBER " << portNbr << endl;
 
     return portNbr;
@@ -109,7 +112,9 @@ void mainCycle(zmq::socket_t * socket){
         sleep(5);
         cout << "Sending things over:" << endl;
         for (int i = 0; i != 10; i++) {
-            std::string objStr = "Photon/Ray " + to_string(i);
+            std::ostringstream oss;
+            oss << "Photon/Ray " << i;
+            std::string objStr = oss.str();
             int size = objStr.size();
 
             zmq::message_t message (size);

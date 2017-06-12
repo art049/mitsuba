@@ -40,7 +40,10 @@ int main () {
     zmq::context_t context (1);
 
     for(unsigned int i=0; i<NB_CHUNKS; i++){
-        std::string address = "tcp://*: " + to_string(5555+i+1);
+        
+        std::ostringstream oss;
+        oss << "tcp://*: " << 5555+i+1;
+        std::string address = oss.str();
         cout << "Creating client " << i << " socket at: " << address << endl;
         
         zmq::socket_t * socket = new zmq::socket_t(context, ZMQ_PAIR);
@@ -100,7 +103,10 @@ void clientFirstHandshake(zmq::socket_t * socket){
 
         if(rpl.compare("firstHandShake") == 0){
             //  Send the client its port number
-            std::string replyStr = to_string(5555+i+1);
+            std::ostringstream oss;
+            oss << 5555+i+1;
+            std::string replyStr = oss.str();
+
             int size = replyStr.size();
             zmq::message_t reply(size);
             memcpy(reply.data (), replyStr.c_str(), size);

@@ -1,4 +1,4 @@
 LDLIBS = -lzmq
-CPPFLAGS = -std=c++11 -g -pthread
+CPPFLAGS = -g -pthread
 
 main: client server getServerAddress.sh

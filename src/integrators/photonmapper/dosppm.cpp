@@ -275,7 +275,7 @@ public:
 	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
 
 		// Create the subscene folder and recreate it
-		std::string folderPath("/tmp/subscene/");
+		std::string folderPath("./subscene/");
 		fs::path dir(folderPath.c_str());
 		fs::remove_all(folderPath);
 		fs::create_directory(dir);
@@ -283,7 +283,7 @@ public:
 		// Copy what we want from the original file, keep
 		const char * src_file = scene->getSourceFile().string().c_str();
 		std::ifstream src(src_file);
-		std::ofstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
+		std::ofstream sceneTemplate("./subscene/subSceneTemplate.xml");
 	    std::string line;
 	    std::string shape("<shape");
 		while(getline(src, line)) {
@@ -304,7 +304,7 @@ public:
 		// Create directory for this subscene
 		std::string folderPath("");
 		std::ostringstream oss;
-		oss << "/tmp/subscene/sub" << chunkNb << "/";
+		oss << "./subscene/sub" << chunkNb << "/";
 		folderPath += oss.str();
 		oss.str("");
 		fs::path dir(folderPath.c_str());
@@ -319,7 +319,7 @@ public:
 		copyDir(source,dest);
 
 		// Copy template into new scene file
-		std::ifstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
+		std::ifstream sceneTemplate("./subscene/subSceneTemplate.xml");
 		std::ostringstream scenePath;
 		scenePath << folderPath << "subscene" << chunkNb << ".xml";
 		std::ofstream subscene(scenePath.str().c_str());
