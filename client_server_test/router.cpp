@@ -5,10 +5,14 @@
 #include <sstream>
 #include <map>
 
-#include "socketPolling.h"
-#include "portNumber.h"
+#include "messagesAndPorts.h"
 
 using namespace std;
+
+struct socketPollingInfo {
+    map < string, zmq::socket_t * > & sockets;
+    map < string, zmq::pollitem_t > items;
+};
 
 void clientFirstHandshake(socketPollingInfo & infos, zmq::socket_t * handshakeSocket, int nbChunks, zmq::context_t * context);
 void sendGoSignal(map < string, zmq::socket_t * > sockets);
@@ -88,33 +92,29 @@ void routeMessages(socketPollingInfo & infos){
     
     map < string, zmq::pollitem_t > items = infos.items;
     map < string, zmq::socket_t * > sockets = infos.sockets;
-    vector < zmq::pollitem_t * > itemsVect;
+    vector < zmq::pollitem_t > itemsValue;
+    vector < string > itemsKey;
 
     for( map < string, zmq::pollitem_t >::iterator it = items.begin(); it != items.end(); ++it ) {
-        itemsVect.push_back( &(it->second) );
+        itemsKey.push_back( it->first );
+        itemsValue.push_back( it->second );
     }
     
     // Poll through the messages
     while (1) {
         zmq::message_t message;
+        string recipient;
         int itemsSize = items.size();
-        zmq::poll(itemsVect.data(), itemsSize, -1);
+        zmq::poll(itemsValue.data(), itemsSize, -1);
 
-        for( map < string, zmq::pollitem_t >::iterator it = items.begin(); it != items.end(); ++it ) {
+        for(int i=0; i<itemsValue.size(); i++) {
             // Check if that client sent a message
-            if ((it->second).revents & ZMQ_POLLIN) {
-                sockets[it->first]->recv(&message);
-                string rpl = string(static_cast<char*>(message.data()), message.size());
-                cout << "Received \"" << rpl << "\" from " << it->first << endl;
-
-                sockets[it->first]->recv(&message);
-                rpl = string(static_cast<char*>(message.data()), message.size());
-                cout << "Received \"" << rpl << "\" from " << it->first << "\n" << endl;
-
-                //  Send reply back to client
-                zmq::message_t reply(message.size());
-                reply.copy(&message);
-                sockets[it->first]->send(reply);
+            if (itemsValue[i].revents & ZMQ_POLLIN) {
+                // Get the message
+                receiveMessageRouter(sockets[itemsKey[i]], &message, recipient, itemsKey[i]);
+                // Transfer it to the person supposed to get it
+                sockets[recipient]->send(message);
+                std::cout << "Forwarding message to " << recipient << std::endl;
             }
         }
         
@@ -152,7 +152,7 @@ void clientFirstHandshake(socketPollingInfo & infos, zmq::socket_t * handshakeSo
         if(rpl.compare("firstHandShake") == 0){
             // Create unique port number
             ostringstream oss;
-            oss << handshakePortNumber+i+1;
+            oss << handshakePortNumber+i;
             string portNumberStr = oss.str();
 
             // Bind associated socket
@@ -167,7 +167,7 @@ void clientFirstHandshake(socketPollingInfo & infos, zmq::socket_t * handshakeSo
             zmq::message_t reply(size);
             memcpy(reply.data (), portNumberStr.c_str(), size);
             handshakeSocket->send(reply);
-            cout << "Assigned port number " << handshakePortNumber + i + 1  << " and created associated socket"<< endl;
+            cout << "Assigned port number " << handshakePortNumber + i << " and created associated socket"<< endl;
         }else{
             cout << "ERROR, wrong handshake received" << endl;
         }

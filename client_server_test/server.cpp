@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <sstream> 
 
+#include "messagesAndPorts.h"
+
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -11,109 +13,68 @@
 #define sleep(n)    Sleep(n)
 #endif
 
-#include "socketPolling.h"
-
 #define NB_CHUNKS 2
 
-std::string executeScript(std::string script);
+using namespace std;
+
+string executeScript(string script);
 void * receiveData(void * arg);
 void computeStats();
-void clientFirstHandshake(zmq::socket_t * socket);
-void sendGoSignal(vector < zmq::socket_t * > sockets);
 
-string scriptName = "getServerAddress.sh";
+string scriptName = "getAddress.sh";
 
 int main () {
 	
-	std::string tmp = executeScript("chmod +x " + scriptName + " && echo ok");
-    std::string servAdress = executeScript("./" + scriptName);
+	string tmp = executeScript("chmod +x " + scriptName + " && echo ok");
+    string servAdress = executeScript("./" + scriptName);
     cout << "servAdress " << servAdress << endl;
 
-    vector < zmq::socket_t * > sockets;
-    vector<zmq::pollitem_t> items;
-    zmq::context_t context (1);
-
-    for(unsigned int i=0; i<NB_CHUNKS; i++){
-        
-        std::ostringstream oss;
-        oss << "tcp://*: " << 5555+i+1;
-        std::string address = oss.str();
-        cout << "Creating client " << i << " socket at: " << address << endl;
-        
-        zmq::socket_t * socket = new zmq::socket_t(context, ZMQ_PAIR);
-        socket->bind(address.c_str());
-        
-        sockets.push_back(socket);
-        zmq::pollitem_t item = {static_cast<void *>(*(sockets[i])), 0, ZMQ_POLLIN, 0};
-        items.push_back(item);
-    }
-
     //  Prepare our context and socket
-    cout << "Creating handshake socket at tcp://*:5555\n" << endl;
-    zmq::socket_t socket (context, ZMQ_REP);
-    socket.bind ("tcp://*:5555");
+    cout << "Creating socket at tcp://*:" << serverPortNumber << endl;
+    zmq::context_t context (1);
+    zmq::socket_t socket (context, ZMQ_PAIR);
+    ostringstream oss;
+    oss << "tcp://*:" << serverPortNumber;
+    socket.bind (oss.str());
+    oss.str("");
 
-    clientFirstHandshake(&socket);
-    cout << "CLOSING HANDSHAKE SOCKET" << endl;
-    socket.close();
+    // Wait for router to send its address
+    cout << "Waiting for router to send its address" << endl;
+    zmq::message_t message;
+    socket.recv(&message);
+    string routerAddress = string(static_cast<char*>(message.data()), message.size());
+    routerAddress.erase(remove(routerAddress.begin(), routerAddress.end(), '\n'), routerAddress.end());
+    cout << "Received router address: " << routerAddress << endl;
+    
+    // Reply with "Connected!"
+    string replyStr = "Connected!";
+    int size = replyStr.size();
+    zmq::message_t reply(size);
+    memcpy(reply.data (), replyStr.c_str(), size);
+    socket.send(reply);
 
-    sendGoSignal(sockets);
+    cout << "Waiting for others to connect" << endl;
+    zmq::message_t goSignal;
+    socket.recv(&goSignal);
+    std::string signalStr = std::string(static_cast<char*>(goSignal.data()), goSignal.size());
+    cout << "Let's go!" << "\n" << endl;
 
-    // Let's receive the incoming data from all the clients
-    socketPollingInfo infos = {sockets, items};
-    pthread_t receiveDataThread;
-    pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&infos));
-
-    // Let's compute the stats
-    computeStats();
+    if(signalStr.compare("GO")!=0){
+        cout << "ERROR: something went wrong on the server" << endl;
+        return -1;
+    }else{
+        // Let's receive some data and compute the stats in parallel
+        pthread_t receiveDataThread;
+        pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&socket));
+        computeStats();
+    }      
 
     //close all sockets 
 
     return 0;
 }
 
-void sendGoSignal(vector < zmq::socket_t * > sockets){
-    cout << "SENDING GO SIGNAL" << endl;
-    for(unsigned int i=0; i<sockets.size(); i++){
-        std::string signalStr = "GO";
-        int size = signalStr.size();
-        zmq::message_t signal(size);
-        memcpy(signal.data (), signalStr.c_str(), size);
-        sockets[i]->send(signal);      
-    }
-    cout << "DONE\n" << endl; 
-}
-
-
-
-void clientFirstHandshake(zmq::socket_t * socket){
-    cout << "WAITING FOR ALL " << NB_CHUNKS << " CLIENTS TO HANDSHAKE" << endl; 
-    for(unsigned int i=0; i<NB_CHUNKS; i++){
-        zmq::message_t request;
-
-        //  Wait for the next client to connect
-        socket->recv(&request);
-        std::string rpl = std::string(static_cast<char*>(request.data()), request.size());
-
-        if(rpl.compare("firstHandShake") == 0){
-            //  Send the client its port number
-            std::ostringstream oss;
-            oss << 5555+i+1;
-            std::string replyStr = oss.str();
-
-            int size = replyStr.size();
-            zmq::message_t reply(size);
-            memcpy(reply.data (), replyStr.c_str(), size);
-            socket->send(reply);
-            std::cout << "Assigned port number " << 5555 + i + 1 << std::endl;
-        }else{
-            cout << "ERROR, wrong handshake received" << endl;
-        }
-    }
-    cout << "ALL CLIENTS WERE ASSIGNED A PORT NUMBER" << endl;
-}
-
-std::string executeScript(std::string script){
+string executeScript(string script){
     FILE *lsofFile_p = popen(script.c_str(), "r");
 
     if (!lsofFile_p)
@@ -129,32 +90,15 @@ std::string executeScript(std::string script){
 
 void * receiveData(void * arg){
     
-    socketPollingInfo infos = *((socketPollingInfo *)arg);
-    vector < zmq::pollitem_t > items = infos.items;
-    vector < zmq::socket_t * > sockets = infos.sockets;
+    zmq::socket_t * socket = (zmq::socket_t *)arg;
     
     // Poll through the messages
     while (1) {
+        // Check if we received a message
         zmq::message_t message;
-        int itemsSize = items.size();
-        zmq::poll(items.data(), itemsSize, -1);
-
-        for(int i=0; i<itemsSize; i++){
-            // Check if that client sent a message
-            if (items[i].revents & ZMQ_POLLIN) {
-                sockets[i]->recv(&message);
-                std::string rpl = std::string(static_cast<char*>(message.data()), message.size());
-                std::cout << "Received \"" << rpl << "\" from " << i << std::endl;
-
-                //  Send reply back to client
-                std::string replyStr = "Obj received";
-                int size = replyStr.size();
-                zmq::message_t reply(size);
-                memcpy(reply.data (), replyStr.c_str(), size);
-                sockets[i]->send(reply);
-            }
-        }
-        
+        socket->recv(&message);
+        string messageStr = string(static_cast<char*>(message.data()), message.size());
+        cout << "Received \"" << messageStr << "\"" << endl;
     }
 
     pthread_exit (NULL);
