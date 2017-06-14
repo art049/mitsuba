@@ -70,7 +70,9 @@ RUN apt-get update \
     xserver-xorg-input-void \
     x11-apps mesa-utils
 
-
+### dosppm zmq dependencies
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    libzmq3-dev
 
 COPY etc/skel/.xinitrc /etc/skel/.xinitrc
 RUN useradd -m -s /bin/bash user
