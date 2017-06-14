@@ -17,6 +17,7 @@ struct socketPollingInfo {
 void clientFirstHandshake(socketPollingInfo & infos, zmq::socket_t * handshakeSocket, int nbChunks, zmq::context_t * context);
 void sendGoSignal(map < string, zmq::socket_t * > sockets);
 void routeMessages(socketPollingInfo & infos);
+void receiveMessageRouter(zmq::socket_t * socket, zmq::message_t * message, std::string & recipient, std::string sender);
 
 string executeScript(string script);
 string scriptName = "getAddress.sh";
@@ -186,4 +187,17 @@ void sendGoSignal(map < string, zmq::socket_t * > sockets){
         sockets[it->first]->send(signal);      
     }
     cout << "Done\n" << endl; 
+}
+
+void receiveMessageRouter(zmq::socket_t * socket, zmq::message_t * message, std::string & recipient, std::string sender){
+
+    // Get the id of the person it is supposed to get to
+    socket->recv(message);
+    recipient = std::string(static_cast<char*>(message->data()), message->size());
+    // Get the actual message for it
+    socket->recv(message);
+
+    // Debug only
+    std::string rpl = std::string(static_cast<char*>(message->data()), message->size());
+    std::cout << "Received message " << rpl << " from " << sender << " to " << recipient << std::endl;
 }

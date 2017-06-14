@@ -19,17 +19,4 @@ void sendMessage(zmq::socket_t * socket, std::string messageStr, std::string rec
     std::cout << "Sending " << messageStr << " to " << recipient << std::endl;
 }
 
-void receiveMessageRouter(zmq::socket_t * socket, zmq::message_t * message, std::string & recipient, std::string sender){
-
-    // Get the id of the person it is supposed to get to
-    socket->recv(message);
-    recipient = std::string(static_cast<char*>(message->data()), message->size());
-    // Get the actual message for it
-    socket->recv(message);
-
-    // Debug only
-    std::string rpl = std::string(static_cast<char*>(message->data()), message->size());
-    std::cout << "Received message " << rpl << " from " << sender << " to " << recipient << std::endl;
-}
-
 #endif
