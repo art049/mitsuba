@@ -280,15 +280,18 @@ public:
 		fs::remove_all(folderPath);
 		fs::create_directory(dir);
 
-		// Copy what we want from the original file, keep
+		// Copy what we want from the original file
 		const char * src_file = scene->getSourceFile().string().c_str();
 		std::ifstream src(src_file);
 		std::ofstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
 	    std::string line;
 	    std::string shape("<shape");
+        std::string integrator("<integrator type=");
 		while(getline(src, line)) {
 		    if (line.find(shape, 0) != std::string::npos) {
 		        break;
+		    }else if (line.find(integrator, 0) != std::string::npos) {
+		        sceneTemplate << "<integrator type=\"sppm\" >" << endl;
 		    }else{
 		    	sceneTemplate << line << endl;
 		    }
