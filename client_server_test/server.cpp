@@ -11,15 +11,9 @@
 #define sleep(n)    Sleep(n)
 #endif
 
+#include "socketPolling.h"
+
 #define NB_CHUNKS 2
-
-using namespace std;
-
-struct socketPollingInfo {
-    vector < zmq::socket_t * > sockets;
-    vector < zmq::pollitem_t > items;
-    zmq::socket_t * socket;
-};
 
 std::string executeScript(std::string script);
 void * receiveData(void * arg);
@@ -31,7 +25,7 @@ string scriptName = "getServerAddress.sh";
 
 int main () {
 	
-	std::string pipeau = executeScript("chmod +x " + scriptName + " && echo ok");
+	std::string tmp = executeScript("chmod +x " + scriptName + " && echo ok");
     std::string servAdress = executeScript("./" + scriptName);
     cout << "servAdress " << servAdress << endl;
 

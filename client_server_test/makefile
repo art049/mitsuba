@@ -1,4 +1,9 @@
 LDLIBS = -lzmq
 CPPFLAGS = -g -pthread
 
-main: client server getServerAddress.sh
+TARGETS = client2 server2 router
+
+main: $(TARGETS) getAddress.sh
+
+clean:
+	rm -rf $(TARGETS)
