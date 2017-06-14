@@ -88,10 +88,10 @@ void routeMessages(socketPollingInfo & infos){
     
     map < string, zmq::pollitem_t > items = infos.items;
     map < string, zmq::socket_t * > sockets = infos.sockets;
-    vector < zmq::pollitem_t > itemsVect;
+    vector < zmq::pollitem_t * > itemsVect;
 
     for( map < string, zmq::pollitem_t >::iterator it = items.begin(); it != items.end(); ++it ) {
-        itemsVect.push_back( it->second );
+        itemsVect.push_back( &(it->second) );
     }
     
     // Poll through the messages
@@ -102,7 +102,7 @@ void routeMessages(socketPollingInfo & infos){
 
         for( map < string, zmq::pollitem_t >::iterator it = items.begin(); it != items.end(); ++it ) {
             // Check if that client sent a message
-            if (it->second.revents & ZMQ_POLLIN) {
+            if ((it->second).revents & ZMQ_POLLIN) {
                 sockets[it->first]->recv(&message);
                 string rpl = string(static_cast<char*>(message.data()), message.size());
                 cout << "Received \"" << rpl << "\" from " << it->first << endl;
