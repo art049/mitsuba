@@ -21,12 +21,14 @@ string executeScript(string script);
 void * receiveData(void * arg);
 void computeStats();
 
-string scriptName = "getAddress.sh";
+string getAddressScript = "getAddress.sh";
+string launchRouterClientScript = "launchEverything.sh";
 
 int main () {
 	
-	string tmp = executeScript("chmod +x " + scriptName + " && echo ok");
-    string servAdress = executeScript("./" + scriptName);
+	string tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
+    string servAdress = executeScript("./" + getAddressScript);
+    servAdress.erase(remove(servAdress.begin(), servAdress.end(), '\n'), servAdress.end());
     cout << "servAdress " << servAdress << endl;
 
     //  Prepare our context and socket
@@ -37,6 +39,13 @@ int main () {
     oss << "tcp://*:" << serverPortNumber;
     socket.bind (oss.str());
     oss.str("");
+
+    // Launching router and clients
+    oss << "./" << launchRouterClientScript << " " << servAdress << " " << NB_CHUNKS;
+    tmp = executeScript(oss.str());
+    oss.str("");
+
+    cout << tmp << endl;
 
     // Wait for router to send its address
     cout << "Waiting for router to send its address" << endl;
