@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 #include <cstdio>
-#include <sstream> 
+#include <sstream>
 
 #include "messagesAndPorts.h"
 
@@ -25,7 +25,7 @@ string getAddressScript = "getAddress.sh";
 string launchRouterClientScript = "launchEverything.sh";
 
 int main () {
-	
+
 	string tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
 	tmp = executeScript("chmod +x " + launchRouterClientScript + " && echo ok");
     string servAdress = executeScript("./" + getAddressScript);
@@ -55,7 +55,7 @@ int main () {
     string routerAddress = string(static_cast<char*>(message.data()), message.size());
     routerAddress.erase(remove(routerAddress.begin(), routerAddress.end(), '\n'), routerAddress.end());
     cout << "Received router address: " << routerAddress << endl;
-    
+
     // Reply with "Connected!"
     string replyStr = "Connected!";
     int size = replyStr.size();
@@ -77,9 +77,9 @@ int main () {
         pthread_t receiveDataThread;
         pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&socket));
         computeStats();
-    }      
+    }
 
-    //close all sockets 
+    //close all sockets
 
     return 0;
 }
@@ -99,9 +99,9 @@ string executeScript(string script){
 }
 
 void * receiveData(void * arg){
-    
+
     zmq::socket_t * socket = (zmq::socket_t *)arg;
-    
+
     // Poll through the messages
     while (1) {
         // Check if we received a message
