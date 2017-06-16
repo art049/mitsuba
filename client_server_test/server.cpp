@@ -27,6 +27,7 @@ string launchRouterClientScript = "launchEverything.sh";
 int main () {
 	
 	string tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
+	tmp = executeScript("chmod +x " + launchRouterClientScript + " && echo ok");
     string servAdress = executeScript("./" + getAddressScript);
     servAdress.erase(remove(servAdress.begin(), servAdress.end(), '\n'), servAdress.end());
     cout << "servAdress " << servAdress << endl;
@@ -37,7 +38,7 @@ int main () {
     zmq::socket_t socket (context, ZMQ_PAIR);
     ostringstream oss;
     oss << "tcp://*:" << serverPortNumber;
-    socket.bind (oss.str());
+    socket.bind (oss.str().c_str());
     oss.str("");
 
     // Launching router and clients

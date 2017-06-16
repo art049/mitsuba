@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <sstream>
 #include <map>
+#include <vector>
 
 #include "messagesAndPorts.h"
 
@@ -73,7 +74,7 @@ int main (int argc, char * argv[]) {
     zmq::socket_t handshakeSocket (context, ZMQ_REP);
     ostringstream oss;
     oss << "tcp://*:" << handshakePortNumber;
-    handshakeSocket.bind (oss.str());
+    handshakeSocket.bind (oss.str().c_str());
     oss.str("");
 
     // Open a dedicated socket to every client and make sur they wait for everyone to be connected
@@ -155,11 +156,13 @@ void clientFirstHandshake(socketPollingInfo & infos, zmq::socket_t * handshakeSo
             ostringstream oss;
             oss << handshakePortNumber+i;
             string portNumberStr = oss.str();
+            oss.str("");
 
             // Bind associated socket
             zmq::socket_t * socket = new zmq::socket_t(*context, ZMQ_PAIR);
             string header("tcp://*: ");
-            socket->bind(header + portNumberStr.c_str());
+            oss << header << portNumberStr; 
+            socket->bind(oss.str().c_str());
             infos.sockets[idStr] = socket;
             zmq::pollitem_t item = {static_cast<void *>(*(infos.sockets[idStr])), 0, ZMQ_POLLIN, 0};
             infos.items[idStr] = item;

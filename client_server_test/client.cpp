@@ -24,19 +24,16 @@ string getRandomRecipient();
 int main (int argc, char * argv[])
 {
     // TODO: read this from a file created by the script that launches clients
-    string servAddr, routerAddr, id;
-    if(argc != 4){
-        cout << "ERROR: please pass the server and router address and id as arguments" << endl;
+    string routerAddr, id;
+    if(argc != 3){
+        cout << "ERROR: please pass the router address and id as arguments" << endl;
         return -1;
     }else{
         ostringstream oss;
-        oss << "tcp://" << argv[1] << ":" << serverPortNumber;
-        routerAddr = oss.str();
-        oss.str("");
-        oss << "tcp://" << argv[2] << ":" << handshakePortNumber;
-        servAddr = oss.str(); 
-        id = argv[3];
-        cout << "serv: " << servAddr << " rout: " << routerAddr << endl;
+        oss << "tcp://" << argv[1] << ":" << handshakePortNumber;
+        routerAddr = oss.str(); 
+        id = argv[2];
+        cout << " rout: " << routerAddr << endl;
     }
 
     // TODO: Remove this
@@ -46,18 +43,18 @@ int main (int argc, char * argv[])
     zmq::context_t context (1);
     zmq::socket_t handshakeSocket (context, ZMQ_REQ);
 
-    cout << "\nConnecting to server handshake socket at: " << servAddr << "\n" << endl;
-    handshakeSocket.connect(servAddr.c_str());
+    cout << "\nConnecting to router handshake socket at: " << routerAddr << "\n" << endl;
+    handshakeSocket.connect(routerAddr.c_str());
 
     int portNbr = getPortNumber(&handshakeSocket, id);
     handshakeSocket.close();
 
-    cout << "Connecting to server socket at port " << portNbr << endl;
+    cout << "Connecting to router socket at port " << portNbr << endl;
     ostringstream oss;
     oss << "tcp://" << argv[1] << ":" << portNbr;
-    servAddr = oss.str();
+    routerAddr = oss.str();
     zmq::socket_t communicationSocket (context, ZMQ_PAIR);
-    communicationSocket.connect (servAddr.c_str());
+    communicationSocket.connect (routerAddr.c_str());
 
     cout << "Waiting for others to connect" << endl;
     zmq::message_t reply;
@@ -66,7 +63,7 @@ int main (int argc, char * argv[])
     cout << "Let's go!" << "\n" << endl;
 
     if(rpl.compare("GO")!=0){
-        cout << "ERROR: something went wrong on the server" << endl;
+        cout << "ERROR: something went wrong on the router" << endl;
         return -1;
     }else{
         // Let's receive the incoming data
@@ -79,9 +76,9 @@ int main (int argc, char * argv[])
 }
 
 int getPortNumber(zmq::socket_t * socket, string id){
-    cout << "Asking server for port number" << endl;
+    cout << "Asking router for port number" << endl;
 
-    //  Ask the server for our port
+    //  Ask the router for our port
     string requestStr(string("firstHandShake-") + id.c_str());
    
     int size = requestStr.size();
@@ -90,7 +87,7 @@ int getPortNumber(zmq::socket_t * socket, string id){
     cout << "Sending obj " << requestStr << endl;
     socket->send(message);
 
-    //  Wait for the server to respond
+    //  Wait for the router to respond
     zmq::message_t reply;
     socket->recv(&reply);
     string rpl = string(static_cast<char*>(reply.data()), reply.size());
