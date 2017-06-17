@@ -1,6 +1,6 @@
-CPPFLAGS = -Wall
+CPPFLAGS = -Wall -std=c++11
 
-TARGETS = deployment
+TARGETS = deployment askingHost
 
 main: $(TARGETS)
 
