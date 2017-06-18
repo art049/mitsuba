@@ -44,8 +44,8 @@ string executeScript(string script);
 void * receiveData(void * arg);
 void computeStats();
 
-string getAddressScript = "../../client_server/getAddress.sh";
-string launchRouterClientScript = "../../client_server/launchEverything.sh";
+string getAddressScript = "src/client_server/getAddress.sh";
+string launchRouterClientScript = "src/client_server/launchEverything.sh";
 
 string executeScript(string script){
     FILE *lsofFile_p = popen(script.c_str(), "r");
@@ -87,9 +87,10 @@ void computeStats(){
 
 int serverMainLoop (int nb_Chunks) {
 
-	string tmp = executeScript("pwd");
-	cout << "pwd: " << tmp << endl;
-	tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
+	int major, minor, patch;
+    zmq_version (&major, &minor, &patch); printf ("Current ØMQ version is %d.%d.%d\n", major, minor, patch);
+
+	string tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
 	tmp = executeScript("chmod +x " + launchRouterClientScript + " && echo ok");
     string servAdress = executeScript("./" + getAddressScript);
     servAdress.erase(remove(servAdress.begin(), servAdress.end(), '\n'), servAdress.end());
