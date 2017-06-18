@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <sys/wait.h>
+#include <signal.h>
 
 using namespace std;
 
@@ -24,9 +25,6 @@ int main(int argc, char* argv[])
     cerr << "Error while openning pipe!" << endl;
     exit(1);
   }
-
-  //int status = 0;
-  //pid_t wait_pid;
 
   pid_t pid = fork();
 
@@ -70,17 +68,18 @@ int main(int argc, char* argv[])
         else -> There is something to read, so let's do it! */
       int ret = select(stdOutput[0] + 1, &set, NULL, NULL, &timeout);
       if (ret == 0)
-          cerr << "Timeout Reached!" << endl;
+      {
+          cerr << "Timeout Reached! Cannot connect to: " << server << endl;
+          kill(pid, SIGKILL);
+      }
       else if (ret < 0)
           cerr << "Error on asking Host." << endl;
       else
       {
         int nbytes = read(stdOutput[0], outputForstd, sizeof(outputForstd));
         read(errOutput[0], outputForerr, sizeof(outputForerr));
-        char name[7] = {};
-        for (int i = 0 ; i < 7 ; i++) name[i] = outputForstd[i];
         if (nbytes != 0)
-          cout << "Machines ready to be used: " << name << endl;
+          cerr << "Machines ready to be used: " << server << endl;
       }
   }
 }
