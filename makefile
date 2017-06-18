@@ -1,5 +1,5 @@
 COMMANDS = "source setpath.sh; bash"
-RUN_COMMANDS = "source setpath.sh; mitsuba scene/bathroom/scene.xml; bash"
+RUN_COMMANDS = "source setpath.sh; mitsuba scene/teapot/scene.xml; bash"
 
 .PHONY: build
 build: Makefile dockerbuild.log
