@@ -21,13 +21,15 @@ int main(int argc, char * argv[])
 	    return -1;
 	}else{
 	    telecomNetwork = argv[1];
+	    cout << "TelNet: " << telecomNetwork << endl;
 	}
 
   startup(telecomNetwork);
 }
 
-void startup(const char * telecomNetwork)
+void startup(const char * telecomNetwork2)
 {
+ 	const char * telecomNetwork = "guthmann@ssh.enst.fr";
   ifstream f("./deploy");
   char line[8] = {};
   while (f >> line)

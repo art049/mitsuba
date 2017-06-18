@@ -12,6 +12,8 @@ plugins += env.SharedLibrary('photonmapper', ['photonmapper/photonmapper.cpp', '
 plugins += env.SharedLibrary('ppm', ['photonmapper/ppm.cpp'])
 plugins += env.SharedLibrary('sppm', ['photonmapper/sppm.cpp'])
 plugins += env.SharedLibrary('dosppm', ['photonmapper/dosppm.cpp'])
+plugins += env.SharedLibrary('dosppm_server', ['photonmapper/dosppm_server.cpp'])
+plugins += env.SharedLibrary('dosppm_client', ['photonmapper/dosppm_client.cpp'])
 
 # Miscellaneous
 plugins += env.SharedLibrary('vpl', ['vpl/vpl.cpp'])
