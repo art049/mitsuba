@@ -7,7 +7,7 @@
 #include <string.h>
 #include <fstream>
 
-void startup();
+void startup(const char * telecomNetwork);
 
 using namespace std;
 
@@ -15,13 +15,19 @@ using namespace std;
 
 int main(int argc, char * argv[])
 {
-  startup();
+  const char * telecomNetwork;
+	if(argc != 2){
+	    cout << "ERROR: please pass your ssh id as an argument" << endl;
+	    return -1;
+	}else{
+	    telecomNetwork = argv[1];
+	}
+
+  startup(telecomNetwork);
 }
 
-void startup()
+void startup(const char * telecomNetwork)
 {
-  const char * telecomNetwork = "vbisogno@ssh.enst.fr";
-
   ifstream f("./deploy");
   char line[8] = {};
   while (f >> line)
