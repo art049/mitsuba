@@ -17,7 +17,7 @@ int main(int argc, char * argv[])
 {
   const char * telecomNetwork;
 	if(argc != 2){
-	    cout << "ERROR: please pass your ssh id as an argument" << endl;
+	    cout << "ERROR: please pass your ssh id as an argument: telecom_login@ssh.enst.fr" << endl;
 	    return -1;
 	}else{
 	    telecomNetwork = argv[1];
