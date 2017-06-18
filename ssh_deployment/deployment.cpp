@@ -42,11 +42,23 @@ void startup(const char * telecomNetwork2)
             std::cerr << "Uh-Oh! fork() failed.\n";
             exit(1);
         case 0: /* Child process */
-            execlp("askingHost", "askingHost", telecomNetwork, server, (char*) NULL); /* Execute the program */
+            execl("./askingHost", "askingHost", telecomNetwork, server, (char*) NULL); /* Execute the program */
             std::cerr << "execl() failed!"; /* execl doesn't return unless there's an error */
             exit(1);
-        /*default: //Parent process
-            std::cout << "Process created with pid " << pid << "\n";
+        //default: //Parent process
+            /*int returnStatus;
+            waitpid(pid, &returnStatus, 0);
+
+            if (returnStatus == 0)  // Verify child process terminated without error.
+             {
+                std::cout << "The child process terminated normally." << std::endl;
+             }
+
+             if (returnStatus == 1)
+             {
+                std::cout << "The child process terminated with an error!." << std::endl;
+             }*/
+            /*std::cout << "Process created with pid " << pid << "\n";
             int* status;
             while (!WIFEXITED(status)) {
                 waitpid(pid, status, 0);
