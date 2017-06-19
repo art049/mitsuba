@@ -247,7 +247,7 @@ public:
 		for(int depth = 0; depth < split_depth; depth++){
 			std::vector<iAABB> tmp_chunks;
 			for(unsigned int i = 0; i < chunks.size(); i++){
-				cur_chunks = split_in_chunks(poly_count, &chunks[i], n_cell);
+				cur_chunks = split_in_chunks(poly_count, &chunks[i], n_cell, grid_size);
 				tmp_chunks.push_back(cur_chunks.first);
 				tmp_chunks.push_back(cur_chunks.second);
 			}
@@ -293,7 +293,7 @@ public:
         std::string envmap("<emitter type=\"envmap\"");
         std::string emitter("<emitter");
         std::string endScene("</scene");
-		
+
         // For now I store the lights in all the chunks. Couldn't fiugre out a better way.
 		while(getline(src, line)) {
 		    if (line.find(shape, 0) != std::string::npos) {
@@ -328,7 +328,7 @@ public:
 
 	}
 
-	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk, int chunkNb){
+	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk, int chunkNb, float grid_size){
 
 		// Create directory for this subscene
 		std::string folderPath("");
@@ -357,7 +357,7 @@ public:
 		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
 
 		// Loop through the meshes
-		TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
+		TAABB<Point> chunkAABB(Point(grid_size * chunk.min), Point(grid_size * chunk.max));
 		std::string chunkName("chunk");
 		oss << chunkNb;
 		chunkName += oss.str();
@@ -446,7 +446,7 @@ public:
 
 		const ref_vector<Emitter> &emitters = scene->getEmitters();
 		cout << "Nb emitters: " << emitters.size() << endl;
-		
+
 		for(unsigned int i =0; i<emitters.size(); i++){
 			const Emitter * emit = emitters[i].get();
 			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
