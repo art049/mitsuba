@@ -274,7 +274,7 @@ public:
 		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
 	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
 
-		cout << "This: " << this->toString() << endl;
+		//cout << "This: " << this->toString() << endl;
 
 		// Create the subscene folder and recreate it
 		std::string folderPath("/tmp/subscene/");

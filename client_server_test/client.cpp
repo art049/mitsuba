@@ -2,7 +2,6 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-#include <string>
 #include <unistd.h>
 
 #include "messagesAndPorts.h"
@@ -13,19 +12,19 @@ using namespace std;
 void * receiveData(void * arg);
 void mainCycle(zmq::socket_t * socket);
 int getPortNumber(zmq::socket_t * socket, string id);
-void sendMessage(zmq::socket_t * socket, string messageStr, string recipient);
 string getRandomRecipient();
 
 int main (int argc, char * argv[])
 {
     // TODO: read this from a file created by the script that launches clients
-    string routerAddr, id;
+    string routerAddr, id, portNumber;
     if(argc != 3){
         cout << "ERROR: please pass the router address and id as arguments" << endl;
         return -1;
     }else{
         ostringstream oss;
-        oss << "tcp://" << argv[1] << ":" << handshakePortNumber;
+        portNumber = argv[1];
+        oss << "tcp://" << portNumber << ":" << handshakePortNumber;
         routerAddr = oss.str(); 
         id = argv[2];
         cout << " rout: " << routerAddr << endl;
@@ -46,7 +45,7 @@ int main (int argc, char * argv[])
 
     cout << "Connecting to router socket at port " << portNbr << endl;
     ostringstream oss;
-    oss << "tcp://" << argv[1] << ":" << portNbr;
+    oss << "tcp://" << portNumber << ":" << portNbr;
     routerAddr = oss.str();
     zmq::socket_t communicationSocket (context, ZMQ_PAIR);
     communicationSocket.connect (routerAddr.c_str());
@@ -67,7 +66,7 @@ int main (int argc, char * argv[])
         mainCycle(&communicationSocket);
     }
 
-    return 0;
+    return 0;   
 }
 
 int getPortNumber(zmq::socket_t * socket, string id){
