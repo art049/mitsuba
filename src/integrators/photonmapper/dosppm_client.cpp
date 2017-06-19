@@ -41,25 +41,36 @@
 using namespace std;
 
 void * receiveData(void * arg);
-void mainCycle(zmq::socket_t * socket);
+void mainCycle(zmq::socket_t * socket, string id);
 int getPortNumber(zmq::socket_t * socket, string id);
 string getRandomRecipient();
 int clientStartup();
 
 int clientStartup(){
 	// TODO: read this from a file created by the script that launches clients
-    string routerAddr, id, portNumber;
+    string routerAddr, id, routerName;
     /*if(argc != 3){
         cout << "ERROR: please pass the router address and id as arguments" << endl;
         return -1;
     }else{
         ostringstream oss;
-        portNumber = argv[1];
-        oss << "tcp://" << portNumber << ":" << handshakePortNumber;
-        routerAddr = oss.str(); 
+        routerName = argv[1];
+        oss << "tcp://" << routerName << ":" << handshakePortNumber;
+        routerAddr = oss.str();
         id = argv[2];
         cout << " rout: " << routerAddr << endl;
     }*/
+
+    std::ostringstream configPath("/tmp/subscene/config.txt");
+    std::ifstream configFile(configPath.str().c_str());
+    getline(configFile, routerName);
+    ostringstream oss;
+    oss << "tcp://" << routerName << ":" << handshakePortNumber;
+    routerAddr = oss.str();
+    oss.str("");
+    getline(configFile, id);
+    cout << "Router Addr: " << routerAddr << " Client ID: " << id << endl;
+    configFile.close();
 
     // TODO: Remove this
     srand (time(NULL));
@@ -75,8 +86,7 @@ int clientStartup(){
     handshakeSocket.close();
 
     cout << "Connecting to router socket at port " << portNbr << endl;
-    ostringstream oss;
-    oss << "tcp://" << portNumber << ":" << portNbr;
+    oss << "tcp://" << routerName << ":" << portNbr;
     routerAddr = oss.str();
     zmq::socket_t communicationSocket (context, ZMQ_PAIR);
     communicationSocket.connect (routerAddr.c_str());
@@ -94,10 +104,10 @@ int clientStartup(){
         // Let's receive the incoming data
         pthread_t receiveDataThread;
         pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&communicationSocket));
-        mainCycle(&communicationSocket);
+        mainCycle(&communicationSocket, id);
     }
 
-    return 0;	
+    return 0;
 }
 
 int getPortNumber(zmq::socket_t * socket, string id){
@@ -105,7 +115,7 @@ int getPortNumber(zmq::socket_t * socket, string id){
 
     //  Ask the router for our port
     string requestStr(string("firstHandShake-") + id.c_str());
-   
+
     int size = requestStr.size();
     zmq::message_t message (size);
     memcpy (message.data (), requestStr.c_str(), size);
@@ -139,7 +149,7 @@ void * receiveData(void * arg){
     return NULL;
 }
 
-void mainCycle(zmq::socket_t * socket){
+void mainCycle(zmq::socket_t * socket, string id){
     while(1){
         cout << "Computing photons, grr..." << endl;
         sleep(5);
@@ -148,7 +158,7 @@ void mainCycle(zmq::socket_t * socket){
         cout << "Sending things over:" << endl;
         for (int i = 0; i != 10; i++) {
             ostringstream oss;
-            oss << "Photon/Ray " << i;
+            oss << "Photon/Ray " << i << " from " << id;
             string objStr = oss.str();
             string recipient = getRandomRecipient();
             sendMessage(socket, objStr, recipient);
@@ -424,7 +434,7 @@ public:
         std::string envmap("<emitter type=\"envmap\"");
         std::string emitter("<emitter");
         std::string endScene("</scene");
-		
+
         // For now I store the lights in all the chunks. Couldn't fiugre out a better way.
 		while(getline(src, line)) {
 		    if (line.find(shape, 0) != std::string::npos) {
@@ -577,12 +587,12 @@ public:
 
 		const ref_vector<Emitter> &emitters = scene->getEmitters();
 		cout << "Nb emitters: " << emitters.size() << endl;
-		
+
 		for(unsigned int i =0; i<emitters.size(); i++){
 			const Emitter * emit = emitters[i].get();
 			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
 			if(!emit->isEnvironmentEmitter()){
-				const Shape * shape = emit->getShape();
+				//const Shape * shape = emit->getShape();
 
 			}
 		}
@@ -663,7 +673,9 @@ public:
 			int sceneResID, int sensorResID, int samplerResID) {
 		Integrator::preprocess(scene, queue, job, sceneResID, sensorResID, samplerResID);
 
-		subdivide_scene(scene);
+		clientStartup();
+
+        subdivide_scene(scene);
 
 
 		if (m_initialRadius == 0) {

@@ -90,7 +90,9 @@ int serverMainLoop (int nb_Chunks) {
 	int major, minor, patch;
     zmq_version (&major, &minor, &patch); printf ("Current ØMQ version is %d.%d.%d\n", major, minor, patch);
 
-	string tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
+	string 	tmp = executeScript("pwd");
+	cout << "PWD: " << tmp << endl;
+	tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
 	tmp = executeScript("chmod +x " + launchRouterClientScript + " && echo ok");
     string servAdress = executeScript("./" + getAddressScript);
     servAdress.erase(remove(servAdress.begin(), servAdress.end(), '\n'), servAdress.end());
@@ -106,11 +108,10 @@ int serverMainLoop (int nb_Chunks) {
     oss.str("");
 
     // Launching router and clients
-    oss << "./" << launchRouterClientScript << " " << servAdress << " " << nb_Chunks;
+    /*oss << "./" << launchRouterClientScript << " " << servAdress << " " << nb_Chunks;
     tmp = executeScript(oss.str());
     oss.str("");
-
-    cout << tmp << endl;
+    cout << tmp << endl;*/
 
     // Wait for router to send its address
     cout << "Waiting for router to send its address" << endl;
@@ -411,7 +412,7 @@ public:
         std::string envmap("<emitter type=\"envmap\"");
         std::string emitter("<emitter");
         std::string endScene("</scene");
-		
+
         // For now I store the lights in all the chunks. Couldn't fiugre out a better way.
 		while(getline(src, line)) {
 		    if (line.find(shape, 0) != std::string::npos) {
@@ -433,7 +434,7 @@ public:
 		    }else if (line.find(envmap, 0) != std::string::npos) {
 		        sceneTemplate << line << endl;
 		    }else if (line.find(integrator, 0) != std::string::npos) {
-		        sceneTemplate << integrator << "\"sppm\" >" << endl;
+		        sceneTemplate << integrator << "\"dosppm_client\" >" << endl;
 		    }else if(line.find(endScene, 0) != std::string::npos){
 		    	break;
 		    }else{
@@ -564,7 +565,7 @@ public:
 
 		const ref_vector<Emitter> &emitters = scene->getEmitters();
 		cout << "Nb emitters: " << emitters.size() << endl;
-		
+
 		for(unsigned int i =0; i<emitters.size(); i++){
 			const Emitter * emit = emitters[i].get();
 			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;

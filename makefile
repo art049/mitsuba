@@ -7,7 +7,8 @@ build: Makefile dockerbuild.log
 	-v $(shell pwd):/mitsuba \
 	-w /mitsuba \
 	mitsuba \
-	sh -c 'scons -j 8'
+	sh -c 'cmake .' \
+	sh -c 'make -f Makefile -j8'
 
 .PHONY: webrun
 webrun: build
