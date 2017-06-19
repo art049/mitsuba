@@ -274,6 +274,8 @@ public:
 		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
 	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
 
+		cout << "This: " << this->toString() << endl;
+
 		// Create the subscene folder and recreate it
 		std::string folderPath("/tmp/subscene/");
 		fs::path dir(folderPath.c_str());
@@ -286,12 +288,36 @@ public:
 		std::ofstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
 	    std::string line;
 	    std::string shape("<shape");
+	    std::string endShape("</shape");
         std::string integrator("<integrator type=");
+        std::string envmap("<emitter type=\"envmap\"");
+        std::string emitter("<emitter");
+        std::string endScene("</scene");
+		
+        // For now I store the lights in all the chunks. Couldn't fiugre out a better way.
 		while(getline(src, line)) {
 		    if (line.find(shape, 0) != std::string::npos) {
-		        break;
+		    	std::string emitterShape(line);
+		        bool isEmit = false;
+		        while(getline(src, line)) {
+		        	emitterShape += "\n";
+		        	emitterShape += line;
+		        	if (line.find(emitter, 0) != std::string::npos) {
+	        	 		isEmit = true;
+	        	 	}
+	        	 	if (line.find(endShape, 0) != std::string::npos) {
+	        	 		if(isEmit){
+	        	 			sceneTemplate << emitterShape << endl;
+						}
+        	 			break;
+	        	 	}
+		        }
+		    }else if (line.find(envmap, 0) != std::string::npos) {
+		        sceneTemplate << line << endl;
 		    }else if (line.find(integrator, 0) != std::string::npos) {
-		        sceneTemplate << "<integrator type=\"sppm\" >" << endl;
+		        sceneTemplate << integrator << "\"sppm\" >" << endl;
+		    }else if(line.find(endScene, 0) != std::string::npos){
+		    	break;
 		    }else{
 		    	sceneTemplate << line << endl;
 		    }
@@ -412,6 +438,25 @@ public:
 				cout << "Created " << objName << endl;
 			}
 		}
+
+
+		// Let's handle the lights now
+
+		// C'est grave la merde, aucune idée de comment gérer ça
+
+		const ref_vector<Emitter> &emitters = scene->getEmitters();
+		cout << "Nb emitters: " << emitters.size() << endl;
+		
+		for(unsigned int i =0; i<emitters.size(); i++){
+			const Emitter * emit = emitters[i].get();
+			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
+			if(!emit->isEnvironmentEmitter()){
+				const Shape * shape = emit->getShape();
+
+			}
+		}
+
+
 		cout << "Objs for chunk " << chunkNb << " were created\n" << endl;
 		subscene << "</scene>" << endl;
 		sceneTemplate.close();
@@ -486,6 +531,7 @@ public:
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
 			int sceneResID, int sensorResID, int samplerResID) {
 		Integrator::preprocess(scene, queue, job, sceneResID, sensorResID, samplerResID);
+
 		subdivide_scene(scene);
 
 
