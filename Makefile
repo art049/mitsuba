@@ -1834,6 +1834,32 @@ dosppm/fast:
 .PHONY : dosppm/fast
 
 #=============================================================================
+# Target rules for targets named dosppm_client
+
+# Build rule for target.
+dosppm_client: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 dosppm_client
+.PHONY : dosppm_client
+
+# fast build rule for target.
+dosppm_client/fast:
+	$(MAKE) -f src/integrators/CMakeFiles/dosppm_client.dir/build.make src/integrators/CMakeFiles/dosppm_client.dir/build
+.PHONY : dosppm_client/fast
+
+#=============================================================================
+# Target rules for targets named dosppm_server
+
+# Build rule for target.
+dosppm_server: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 dosppm_server
+.PHONY : dosppm_server
+
+# fast build rule for target.
+dosppm_server/fast:
+	$(MAKE) -f src/integrators/CMakeFiles/dosppm_server.dir/build.make src/integrators/CMakeFiles/dosppm_server.dir/build
+.PHONY : dosppm_server/fast
+
+#=============================================================================
 # Target rules for targets named erpt
 
 # Build rule for target.
@@ -2365,6 +2391,8 @@ help:
 	@echo "... bdpt_pch"
 	@echo "... direct"
 	@echo "... dosppm"
+	@echo "... dosppm_client"
+	@echo "... dosppm_server"
 	@echo "... erpt"
 	@echo "... erpt_pch"
 	@echo "... field"

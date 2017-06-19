@@ -23,7 +23,10 @@ add_integrator(ptracer  ptracer/ptracer.cpp
 add_integrator(photonmapper photonmapper/photonmapper.cpp photonmapper/bre.cpp)
 add_integrator(ppm          photonmapper/ppm.cpp)
 add_integrator(sppm         photonmapper/sppm.cpp)
-add_integrator(dosppm         photonmapper/dosppm.cpp)
+add_integrator(dosppm       photonmapper/dosppm.cpp)
+add_integrator(dosppm_server       photonmapper/dosppm_server.cpp)
+add_integrator(dosppm_client      photonmapper/dosppm_client.cpp)
+
 # Miscellaneous
 add_integrator(vpl          vpl/vpl.cpp MTS_HW)
 add_integrator(adaptive     misc/adaptive.cpp)
