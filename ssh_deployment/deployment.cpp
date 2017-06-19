@@ -43,7 +43,7 @@ void startup(const char * telecomNetwork)
             std::cerr << "Uh-Oh! fork() failed.\n";
             exit(1);
         case 0: /* Child process */
-            execl("./askingHost", "askingHost", telecomNetwork2, server, (char*) NULL); /* Execute the program */
+            execl("./askingHost", "askingHost", telecomNetwork, server, (char*) NULL); /* Execute the program */
             std::cerr << "execl() failed!"; /* execl doesn't return unless there's an error */
             exit(1);
         //default: //Parent process
