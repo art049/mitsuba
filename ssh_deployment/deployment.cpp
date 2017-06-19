@@ -27,11 +27,12 @@ int main(int argc, char * argv[])
   startup(telecomNetwork);
 }
 
-void startup(const char * telecomNetwork2)
+void startup(const char * telecomNetwork)
 {
- 	const char * telecomNetwork = "guthmann@ssh.enst.fr";
   ifstream f("./deploy");
   char line[8] = {};
+  pid_t wait_pid;
+  int status;
   while (f >> line)
   {
     const char * server = line;
@@ -67,4 +68,6 @@ void startup(const char * telecomNetwork2)
             std::cout << "Process exited with " << WEXITSTATUS(status) << "\n";*/
     }
   }
+  while ((wait_pid = wait(&status)) > 0);
+  printf("All child processes finished.\n");
 }
