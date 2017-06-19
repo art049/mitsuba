@@ -334,7 +334,7 @@ public:
 		//Count polygons
 		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++){
 			for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
-				if(TAABB<Point>(cells[cell_id]).overlaps(meshes[mesh_id]->getAABB())){
+                if(TAABB<Point>(cells[cell_id]).overlaps(meshes[mesh_id]->getAABB())){
 					//Count poly in box
 					Triangle * triangles = meshes[mesh_id]->getTriangles();
 					for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
@@ -470,8 +470,11 @@ public:
 		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
 
 		// Loop through the meshes
-		TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
-		std::string chunkName("chunk");
+
+        //cout << "Chunk: " << chunk << endl;
+        TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
+        //cout << "ChunkTAABB: " << chunkAABB.toString() << endl;
+        std::string chunkName("chunk");
 		oss << chunkNb;
 		chunkName += oss.str();
 
@@ -525,11 +528,11 @@ public:
 
 				for(unsigned int tri_id=0; tri_id<meshes[mesh_id]->getTriangleCount(); tri_id++){
 					// @Arthur: tester si le triangle intersecte le chunk
-					if(chunkAABB.overlaps(f[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
+					//if(chunkAABB.overlaps(f[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
 						std::ostringstream oss;
 						oss << "f " << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << " " << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << " " << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "\n";
 						fstr += oss.str();
-					}
+					//}
 				}
 
 
