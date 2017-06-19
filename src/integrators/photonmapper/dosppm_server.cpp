@@ -90,7 +90,9 @@ int serverMainLoop (int nb_Chunks) {
 	int major, minor, patch;
     zmq_version (&major, &minor, &patch); printf ("Current ØMQ version is %d.%d.%d\n", major, minor, patch);
 
-	string tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
+	string 	tmp = executeScript("pwd");
+	cout << "PWD: " << tmp << endl;
+	tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
 	tmp = executeScript("chmod +x " + launchRouterClientScript + " && echo ok");
     string servAdress = executeScript("./" + getAddressScript);
     servAdress.erase(remove(servAdress.begin(), servAdress.end(), '\n'), servAdress.end());
