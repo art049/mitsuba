@@ -42,136 +42,11 @@ using namespace std;
 
 void * receiveData(void * arg);
 void mainCycle(zmq::socket_t * socket, string id);
+void mainCycle2(zmq::socket_t * socket, string id);
 int getPortNumber(zmq::socket_t * socket, string id);
 string getRandomRecipient();
-int clientStartup();
+int clientStartup(zmq::socket_t * communicationSocket, zmq::context_t * context, string & id);
 
-int clientStartup(){
-	// TODO: read this from a file created by the script that launches clients
-    string routerAddr, id, routerName;
-    /*if(argc != 3){
-        cout << "ERROR: please pass the router address and id as arguments" << endl;
-        return -1;
-    }else{
-        ostringstream oss;
-        routerName = argv[1];
-        oss << "tcp://" << routerName << ":" << handshakePortNumber;
-        routerAddr = oss.str();
-        id = argv[2];
-        cout << " rout: " << routerAddr << endl;
-    }*/
-
-    std::ostringstream configPath("/tmp/subscene/config.txt");
-    std::ifstream configFile(configPath.str().c_str());
-    getline(configFile, routerName);
-    ostringstream oss;
-    oss << "tcp://" << routerName << ":" << handshakePortNumber;
-    routerAddr = oss.str();
-    oss.str("");
-    getline(configFile, id);
-    cout << "Router Addr: " << routerAddr << " Client ID: " << id << endl;
-    configFile.close();
-
-    // TODO: Remove this
-    srand (time(NULL));
-
-    //  Prepare our context and socket
-    zmq::context_t context (1);
-    zmq::socket_t handshakeSocket (context, ZMQ_REQ);
-
-    cout << "\nConnecting to router handshake socket at: " << routerAddr << "\n" << endl;
-    handshakeSocket.connect(routerAddr.c_str());
-
-    int portNbr = getPortNumber(&handshakeSocket, id);
-    handshakeSocket.close();
-
-    cout << "Connecting to router socket at port " << portNbr << endl;
-    oss << "tcp://" << routerName << ":" << portNbr;
-    routerAddr = oss.str();
-    zmq::socket_t communicationSocket (context, ZMQ_PAIR);
-    communicationSocket.connect (routerAddr.c_str());
-
-    cout << "Waiting for others to connect" << endl;
-    zmq::message_t reply;
-    communicationSocket.recv(&reply);
-    string rpl = string(static_cast<char*>(reply.data()), reply.size());
-    cout << "Let's go!" << "\n" << endl;
-
-    if(rpl.compare("GO")!=0){
-        cout << "ERROR: something went wrong on the router" << endl;
-        return -1;
-    }else{
-        // Let's receive the incoming data
-        pthread_t receiveDataThread;
-        pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&communicationSocket));
-        mainCycle(&communicationSocket, id);
-    }
-
-    return 0;
-}
-
-int getPortNumber(zmq::socket_t * socket, string id){
-    cout << "Asking router for port number" << endl;
-
-    //  Ask the router for our port
-    string requestStr(string("firstHandShake-") + id.c_str());
-
-    int size = requestStr.size();
-    zmq::message_t message (size);
-    memcpy (message.data (), requestStr.c_str(), size);
-    cout << "Sending obj " << requestStr << endl;
-    socket->send(message);
-
-    //  Wait for the router to respond
-    zmq::message_t reply;
-    socket->recv(&reply);
-    string rpl = string(static_cast<char*>(reply.data()), reply.size());
-    //cout << "Received \"" << rpl << "\"" << endl;
-    int portNbr;
-    istringstream(rpl) >> portNbr;
-    cout << "Received port number " << portNbr << endl;
-
-    return portNbr;
-}
-
-void * receiveData(void * arg){
-    zmq::socket_t * socket((zmq::socket_t *)arg);
-    while (true) {
-        zmq::message_t request;
-
-        //  Wait for next request from client
-        socket->recv(&request);
-        string rpl = string(static_cast<char*>(request.data()), request.size());
-        cout << "Received \"" << rpl << "\"" << endl;
-
-    }
-    pthread_exit (NULL);
-    return NULL;
-}
-
-void mainCycle(zmq::socket_t * socket, string id){
-    while(1){
-        cout << "Computing photons, grr..." << endl;
-        sleep(5);
-        cout << "Computing rays, grr..." << endl;
-        sleep(5);
-        cout << "Sending things over:" << endl;
-        for (int i = 0; i != 10; i++) {
-            ostringstream oss;
-            oss << "Photon/Ray " << i << " from " << id;
-            string objStr = oss.str();
-            string recipient = getRandomRecipient();
-            sendMessage(socket, objStr, recipient);
-        }
-        cout << endl;
-    }
-}
-
-string getRandomRecipient(){
-    string entities[3] = {"chunk0", "chunk1", "server"};
-    int idx = rand() % 3;
-    return entities[idx];
-}
 
 MTS_NAMESPACE_BEGIN
 
@@ -283,400 +158,122 @@ public:
 		m_running = false;
 	}
 
-	int sum_poly(std::vector<unsigned int> poly_count, Point3i min, Point3i max, Point3i n_cell){
-		unsigned int n_poly = 0;
-		for(float x=min[0]; x < max[0]; x++){
-			for(float y = min[1] ; y < max[1]; y++){
-				for(float z = min[2]; z < max[2]; z++){
-					int cell_id = x + y * n_cell[1] + z * n_cell[0] *  n_cell[1];
-					n_poly += poly_count[cell_id];
-				}
-			}
-		}
-		return n_poly;
-	}
+    int clientStartup(zmq::socket_t * communicationSocket, zmq::context_t * context, string & id){
 
-	std::pair<iAABB, iAABB> split_in_chunks(std::vector<unsigned int> poly_count, iAABB * parent, Point3i n_cell){
-		Point3i min(parent->min), max(parent->max);
-		unsigned int parent_poly_count = sum_poly(poly_count, min, max, n_cell);
-		int min_axis = -1, min_i = -1;
-		unsigned int min_polydifference = parent_poly_count;
-		for(int axis = 0; axis < 3; axis++){
-			Point3i offset_vector(0,0,0);
-			offset_vector[axis] = 1;
-			unsigned int current_polycount = 0;
-			for(int i = min[axis]; i < max[axis]; i++){
-				unsigned int slice_poly_count = sum_poly(poly_count, min, Point3i(max - offset_vector * (max[axis] - i - 1)), n_cell);
-				current_polycount += slice_poly_count;
-				unsigned int current_polydifference = abs(current_polycount - (parent_poly_count - current_polycount));
-				if(current_polydifference < min_polydifference){
-					min_axis = axis;
-					min_i = i;
-					min_polydifference = current_polydifference;
-					cout << "Split output : Axis " << min_axis << " Split pos : " << min_i << " Poly diff : " << min_polydifference << endl;
-				}
-			}
-		}
-		Point3i min_offset_vector(0,0,0);
-		min_offset_vector[min_axis] = 1;
-		return std::make_pair(iAABB(min, Point3i(max - min_offset_vector * (max[min_axis] - min_i - 1))),
-		                 iAABB(Point3i(min + min_offset_vector * (min_i+1)), max));
-	}
+        string routerAddr, routerName;
+        std::ostringstream configPath("/tmp/subscene/config.txt");
+        std::ifstream configFile(configPath.str().c_str());
+        getline(configFile, routerName);
+        ostringstream oss;
+        oss << "tcp://" << routerName << ":" << handshakePortNumber;
+        routerAddr = oss.str();
+        oss.str("");
+        getline(configFile, id);
+        cout << "Router Addr: " << routerAddr << " Client ID: " << id << endl;
+        configFile.close();
 
-	void subdivide_scene(const Scene *scene){
+        // TODO: Remove this
+        srand (time(NULL));
 
-		// COMPUTE SCENE BB
-		//cout << scene->toString() << "\n" << endl;
-		AABB sceneBox = scene->getAABB();
-		float grid_size = 1.;
-		Point cell_offset = Point(grid_size, grid_size, grid_size);
-		cout << "\nScene corners" << endl;
-		for(int i = 0; i < 8; i++)
-		  cout << sceneBox.getCorner(i).toString() << endl;
-		cout << endl;
+        //  Prepare our context and socket
+        zmq::socket_t handshakeSocket (*context, ZMQ_REQ);
 
-		// COMPUTE SCENE GRID
-		Point min = sceneBox.getCorner(0);
-		Point max = sceneBox.getCorner(7);
-		std::vector<AABB> cells;
-		Point3i n_cell(0, 0, 0); // Block count in each direction
-		for(float x=min[0]; x < max[0]; x+= grid_size){
-			for(float y = min[1] ; y < max[1]; y+= grid_size){
-				for(float z = min[2]; z < max[2]; z+= grid_size){
-					Point current(x, y, z);
-					cells.push_back(AABB(current, current + cell_offset));
-					n_cell[2]++;
-				}
-				n_cell[1]++;
-			}
-			n_cell[0]++;
-		}
-		n_cell[2] /= n_cell[1];
-		n_cell[1] /= n_cell[0];
-		cout << "NX:" << n_cell[0] << " NY:"<< n_cell[1] << " NZ:"<< n_cell[2] << endl;
-		cout << "Cells : " << cells.size() << endl;
+        cout << "\nConnecting to router handshake socket at: " << routerAddr << "\n" << endl;
+        handshakeSocket.connect(routerAddr.c_str());
 
-		// COMPUTE POLYGON NUMBER PER CELL
-		std::vector<unsigned int> poly_count(cells.size());
-		std::vector<TriMesh*> meshes = scene->getMeshes();
-		//Count polygons
-		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++){
-			for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
-				//const BSDF *bsdf = meshes[mesh_id]->getBSDF();
-				// bsdf->getID();
-				if(TAABB<Point>(cells[cell_id]).overlaps(meshes[mesh_id]->getAABB())){
-					//Count poly in box
-					Triangle * triangles = meshes[mesh_id]->getTriangles();
-					for(unsigned int tri_id = 0; tri_id < meshes[mesh_id]->getTriangleCount(); tri_id++){
-						if(TAABB<Point>(cells[cell_id]).overlaps(triangles[tri_id].getAABB(meshes[mesh_id]->getVertexPositions())))
-						  poly_count[cell_id]++;
-					}
-				}
-			}
-		}
-		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++)
-		  cout << "Cell " << cell_id << " has " << poly_count[cell_id] << " polygons" << endl;
+        int portNbr = getPortNumber(&handshakeSocket, id);
+        handshakeSocket.close();
 
+        cout << "Connecting to router socket at port " << portNbr << endl;
+        oss << "tcp://" << routerName << ":" << portNbr;
+        routerAddr = oss.str();
+        communicationSocket->connect (routerAddr.c_str());
 
-		// BUILD CHUNKS
-		int split_depth = 3;
-		std::vector<iAABB> chunks;
-		std::pair<iAABB, iAABB> cur_chunks;
+        cout << "Waiting for others to connect" << endl;
+        zmq::message_t reply;
+        communicationSocket->recv(&reply);
+        string rpl = string(static_cast<char*>(reply.data()), reply.size());
+        cout << "Let's go!" << "\n" << endl;
 
-		chunks.push_back(iAABB(Point3i(0,0,0), n_cell));
-		cout << endl;
-		for(int depth = 0; depth < split_depth; depth++){
-			std::vector<iAABB> tmp_chunks;
-			for(unsigned int i = 0; i < chunks.size(); i++){
-				cur_chunks = split_in_chunks(poly_count, &chunks[i], n_cell);
-				tmp_chunks.push_back(cur_chunks.first);
-				tmp_chunks.push_back(cur_chunks.second);
-			}
-			chunks = tmp_chunks;
-		}
-		cout << endl;
+        if(rpl.compare("GO")!=0){
+            cout << "ERROR: something went wrong on the router" << endl;
+            return -1;
+        }else{
+            // Let's receive the incoming data
+            pthread_t receiveDataThread;
+            pthread_create(&receiveDataThread, NULL, receiveData, (void*)(communicationSocket));
+        }
 
-		cout << "CHUNKS:" << endl;
-		for(unsigned int i = 0; i < chunks.size(); i++){
-			cout << chunks[i] << endl;
-		}
-		cout << endl;
+        return 0;
+    }
 
-		cout << "SUBSCENE CREATION" << endl;
-		createSubSceneTemplate(scene);
-		for(unsigned int i = 0; i < chunks.size(); i++){
-			createSubScene(scene, meshes, chunks[i], i);
-		}
-		cout << endl;
-	}
+    int getPortNumber(zmq::socket_t * socket, string id){
+        cout << "Asking router for port number" << endl;
 
-	void createSubSceneTemplate(const Scene *scene){
+        //  Ask the router for our port
+        string requestStr(string("firstHandShake-") + id.c_str());
 
-		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
-	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
+        int size = requestStr.size();
+        zmq::message_t message (size);
+        memcpy (message.data (), requestStr.c_str(), size);
+        cout << "Sending obj " << requestStr << endl;
+        socket->send(message);
 
-		//cout << "This: " << this->toString() << endl;
+        //  Wait for the router to respond
+        zmq::message_t reply;
+        socket->recv(&reply);
+        string rpl = string(static_cast<char*>(reply.data()), reply.size());
+        //cout << "Received \"" << rpl << "\"" << endl;
+        int portNbr;
+        istringstream(rpl) >> portNbr;
+        cout << "Received port number " << portNbr << endl;
 
-		// Create the subscene folder and recreate it
-		std::string folderPath("/tmp/subscene/");
-		fs::path dir(folderPath.c_str());
-		fs::remove_all(folderPath);
-		fs::create_directory(dir);
+        return portNbr;
+    }
 
-		// Copy what we want from the original file
-		const char * src_file = scene->getSourceFile().string().c_str();
-		std::ifstream src(src_file);
-		std::ofstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
-	    std::string line;
-	    std::string shape("<shape");
-	    std::string endShape("</shape");
-        std::string integrator("<integrator type=");
-        std::string envmap("<emitter type=\"envmap\"");
-        std::string emitter("<emitter");
-        std::string endScene("</scene");
+    static void * receiveData(void * arg){
+        zmq::socket_t * socket((zmq::socket_t *)arg);
+        while (true) {
+            zmq::message_t request;
 
-        // For now I store the lights in all the chunks. Couldn't fiugre out a better way.
-		while(getline(src, line)) {
-		    if (line.find(shape, 0) != std::string::npos) {
-		    	std::string emitterShape(line);
-		        bool isEmit = false;
-		        while(getline(src, line)) {
-		        	emitterShape += "\n";
-		        	emitterShape += line;
-		        	if (line.find(emitter, 0) != std::string::npos) {
-	        	 		isEmit = true;
-	        	 	}
-	        	 	if (line.find(endShape, 0) != std::string::npos) {
-	        	 		if(isEmit){
-	        	 			sceneTemplate << emitterShape << endl;
-						}
-        	 			break;
-	        	 	}
-		        }
-		    }else if (line.find(envmap, 0) != std::string::npos) {
-		        sceneTemplate << line << endl;
-		    }else if (line.find(integrator, 0) != std::string::npos) {
-		        sceneTemplate << integrator << "\"sppm\" >" << endl;
-		    }else if(line.find(endScene, 0) != std::string::npos){
-		    	break;
-		    }else{
-		    	sceneTemplate << line << endl;
-		    }
-		}
-		//sceneTemplate << "<scene>" << endl;
-		src.close();
-		sceneTemplate.close();
+            //  Wait for next request from client
+            socket->recv(&request);
+            string rpl = string(static_cast<char*>(request.data()), request.size());
+            cout << "Received \"" << rpl << "\"" << endl;
 
-	}
+        }
+        pthread_exit (NULL);
+        return NULL;
+    }
 
-	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk, int chunkNb){
+    void mainCycle(zmq::socket_t * socket, string id){
+        while(1){
+            cout << "Computing photons, grr..." << endl;
+            sleep(5);
+            cout << "Computing rays, grr..." << endl;
+            sleep(5);
+            cout << "Sending things over:" << endl;
+            for (int i = 0; i != 10; i++) {
+                ostringstream oss;
+                oss << "Photon/Ray " << i << " from " << id;
+                string objStr = oss.str();
+                string recipient = getRandomRecipient();
+                sendMessage(socket, objStr, recipient);
+            }
+            cout << endl;
+        }
+    }
 
-		// Create directory for this subscene
-		std::string folderPath("");
-		std::ostringstream oss;
-		oss << "/tmp/subscene/sub" << chunkNb << "/";
-		folderPath += oss.str();
-		oss.str("");
-		fs::path dir(folderPath.c_str());
-		fs::create_directory(dir);
+    string getRandomRecipient(){
+        string entities[3] = {"chunk0", "chunk1", "server"};
+        int idx = rand() % 3;
+        return entities[idx];
+    }
 
-		// Copy texture files from original into subscene folder
-		std::string sceneFile = scene->getSourceFile().string();
-		std::string sceneTextPath = sceneFile.substr(0,sceneFile.size()-9) + "textures/";
-		//cout << "src: " << sceneTextPath << " dest: " << folderPath + "textures/" << endl;
-		fs::path source(sceneTextPath.c_str());
-		fs::path dest((folderPath + "textures/").c_str());
-		copyDir(source,dest);
-
-		// Copy template into new scene file
-		std::ifstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
-		std::ostringstream scenePath;
-		scenePath << folderPath << "subscene" << chunkNb << ".xml";
-		std::ofstream subscene(scenePath.str().c_str());
-		subscene << sceneTemplate.rdbuf();
-
-		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
-
-		// Loop through the meshes
-		TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
-		std::string chunkName("chunk");
-		oss << chunkNb;
-		chunkName += oss.str();
-
-		for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
-
-			// Check if the mesh intersects the chunk
-
-			// @Arthur: tester si le mesh intersecte le chunk => ce test seul est déjà éliminatoire
-			if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
-				// If so, make an obj out of the triangles that intersect the chunk
-				//cout << mesh_id << endl;
-				Triangle * f = meshes[mesh_id]->getTriangles();
-				Normal * vn = meshes[mesh_id]->getVertexNormals();
-				bool hasVertexNormals = meshes[mesh_id]->hasVertexNormals();
-				Point2 * vt = meshes[mesh_id]->getVertexTexcoords();
-				bool hasVertexTexcoords = meshes[mesh_id]->hasVertexTexcoords();
-			 	Point * v = meshes[mesh_id]->getVertexPositions();
-
-				// Make a new .obj from that file
-				std::string objName(chunkName);
-				std::ostringstream oss;
-				oss << "_obj" << mesh_id << ".obj";
-				objName += oss.str();
-				oss.str("");
-
-				std::ofstream outfile ((folderPath + objName).c_str(), std::ofstream::trunc);
-				std::string vstr("");
-				std::string vnstr("");
-				std::string vtstr("");
-				std::string fstr("");
-
-				for(unsigned int i=0; i<meshes[mesh_id]->getVertexCount(); i++){
-
-					// Add vertices to the .obj
-					std::ostringstream oss;
-					oss << "v " << v[i][0] << " " << v[i][1] << " " << v[i][2] << "\n";
-					vstr += oss.str();
-					oss.str("");
-					// Check for segfaults then add vertices normals to the .obj
-					if(hasVertexNormals){
-						oss << "vn " << vn[i][0] << " " << vn[i][1] << " " << vn[i][2] << "\n";
-						vnstr += oss.str();
-						oss.str("");
-					}
-					// Check for segfaults then add vertices tex coords to the .obj
-					if(hasVertexTexcoords){
-						oss << "vt " << vt[i][0] << " " << vt[i][1] << "\n";
-						vtstr += oss.str();
-					}
-				}
-
-				for(unsigned int tri_id=0; tri_id<meshes[mesh_id]->getTriangleCount(); tri_id++){
-					// @Arthur: tester si le triangle intersecte le chunk
-					if(chunkAABB.overlaps(f[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
-						std::ostringstream oss;
-						oss << "f " << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << " " << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << " " << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "\n";
-						fstr += oss.str();
-					}
-				}
-
-
-				//cout << vnstr << endl;
-				outfile << vstr << std::endl;
-				outfile << vnstr << std::endl;
-				outfile << vtstr << std::endl;
-				outfile << fstr << std::endl;
-				outfile.close();
-
-				const BSDF *bsdf = meshes[mesh_id]->getBSDF();
-				subscene 	<< "\t<shape type=\"obj\" >\n"
-							<< "\t\t<string name=\"filename\" value=\"" << objName << "\" />\n"
-							<< "\t\t<transform name=\"toWorld\" >\n"
-							<< "\t\t\t<matrix value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\"/>\n"
-							<< "\t\t</transform>\n"
-							<< "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
-							<< "\t</shape>" << endl;
-				cout << "Created " << objName << endl;
-			}
-		}
-
-
-		// Let's handle the lights now
-
-		// C'est grave la merde, aucune idée de comment gérer ça
-
-		const ref_vector<Emitter> &emitters = scene->getEmitters();
-		cout << "Nb emitters: " << emitters.size() << endl;
-
-		for(unsigned int i =0; i<emitters.size(); i++){
-			const Emitter * emit = emitters[i].get();
-			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
-			if(!emit->isEnvironmentEmitter()){
-				//const Shape * shape = emit->getShape();
-
-			}
-		}
-
-
-		cout << "Objs for chunk " << chunkNb << " were created\n" << endl;
-		subscene << "</scene>" << endl;
-		sceneTemplate.close();
-		subscene.close();
-	}
-
-	//https://stackoverflow.com/questions/8593608/how-can-i-copy-a-directory-using-boost-filesystem
-	bool copyDir(fs::path const & source,fs::path const & destination)
-	{
-	    try
-	    {
-	        // Check whether the function call is valid
-	        if(!fs::exists(source) || !fs::is_directory(source)){
-	            std::cerr << "Source directory " << source.string()
-	                << " does not exist or is not a directory." << '\n'
-	            ;
-	            return false;
-	        }
-	        // Create the destination directory
-	        if(!fs::create_directory(destination))
-	        {
-	            std::cerr << "Unable to create destination directory"
-	                << destination.string() << '\n'
-	            ;
-	            return false;
-	        }
-	    }
-	    catch(fs::filesystem_error const & e)
-	    {
-	        std::cerr << e.what() << '\n';
-	        return false;
-	    }
-	    // Iterate through the source directory
-	    for(
-	        fs::directory_iterator file(source);
-	        file != fs::directory_iterator(); ++file
-	    )
-	    {
-	        try
-	        {
-	            fs::path current(file->path());
-	            if(fs::is_directory(current))
-	            {
-	                // Found directory: Recursion
-	                if(
-	                    !copyDir(
-	                        current,
-	                        destination / current.filename()
-	                    )
-	                )
-	                {
-	                    return false;
-	                }
-	            }
-	            else
-	            {
-	                // Found file: Copy
-	                fs::copy_file(
-	                    current,
-	                    destination / current.filename()
-	                );
-	            }
-	        }
-	        catch(fs::filesystem_error const & e)
-	        {
-	            std:: cerr << e.what() << '\n';
-	        }
-	    }
-	    return true;
-	}
 
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
 			int sceneResID, int sensorResID, int samplerResID) {
 		Integrator::preprocess(scene, queue, job, sceneResID, sensorResID, samplerResID);
-
-		clientStartup();
-
-        subdivide_scene(scene);
-
 
 		if (m_initialRadius == 0) {
 			/* Guess an initial radius if not provided
@@ -746,11 +343,23 @@ public:
 		Thread::initializeOpenMP(nCores);
 #endif
 
-		int it = 0;
+        zmq::context_t context (1);
+        string id;
+        zmq::socket_t communicationSocket (context, ZMQ_PAIR);
+        clientStartup(&communicationSocket, &context, id);
+
+        int it = 0;
 		while (m_running && (m_maxPasses == -1 || it < m_maxPasses)) {
 			distributedRTPass(scene, samplers);
 			photonMapPass(++it, queue, job, film, sceneResID,
 					sensorResID, samplerResID);
+            for (int i = 0; i < 3 ; i++) {
+                ostringstream oss;
+                oss << "Photon/Ray " << i << " from " << id;
+                string objStr = oss.str();
+                string recipient = getRandomRecipient();
+                sendMessage(&communicationSocket, objStr, recipient);
+            }
 		}
 
 #ifdef MTS_DEBUG_FP
@@ -814,7 +423,16 @@ public:
 					while (true) {
 						if (scene->rayIntersect(ray, gatherPoint.its)) {
 
-							// TODO: CHECK IF PORTAIL?
+							const BSDF *bsdf = gatherPoint.its.getBSDF();
+
+                            // TODO: CHECK IF PORTAIL?
+                            /*
+                                //cout << "Shape: " << gatherPoint.its.getBSDF()->getID() << endl;
+                                if(gatherPoint.its.getBSDF()->getID().compare("portail_ChunkXX")){
+                                    // send ray to chunk
+                                }
+
+                            */
 
 							if (gatherPoint.its.isEmitter())
 								gatherPoint.emission += weight * gatherPoint.its.Le(-ray.d);
@@ -823,8 +441,6 @@ public:
 								gatherPoint.depth = -1;
 								break;
 							}
-
-							const BSDF *bsdf = gatherPoint.its.getBSDF();
 
 							/* Create hit point if this is a diffuse material or a glossy
 							   one, and there has been a previous interaction with

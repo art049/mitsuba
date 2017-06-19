@@ -40,114 +40,8 @@
 
 using namespace std;
 
-string executeScript(string script);
-void * receiveData(void * arg);
-void computeStats();
-
-string getAddressScript = "src/client_server/getAddress.sh";
-string launchRouterClientScript = "src/client_server/launchEverything.sh";
-
-string executeScript(string script){
-    FILE *lsofFile_p = popen(script.c_str(), "r");
-
-    if (!lsofFile_p)
-    {
-        return string("-1");
-    }
-
-    char buffer[1024];
-    char *line_p = fgets(buffer, sizeof(buffer), lsofFile_p);
-    pclose(lsofFile_p);
-    return string(line_p);
-}
-
-void * receiveData(void * arg){
-
-    zmq::socket_t * socket = (zmq::socket_t *)arg;
-
-    // Poll through the messages
-    while (1) {
-        // Check if we received a message
-        zmq::message_t message;
-        socket->recv(&message);
-        string messageStr = string(static_cast<char*>(message.data()), message.size());
-        cout << "Received \"" << messageStr << "\"" << endl;
-    }
-
-    pthread_exit (NULL);
-    return NULL;
-}
-
-void computeStats(){
-    while(1){
-        cout << "Crunching numbers, grr...\n" << endl;
-        sleep(5);
-    }
-}
-
-int serverMainLoop (int nb_Chunks) {
-
-	int major, minor, patch;
-    zmq_version (&major, &minor, &patch); printf ("Current ØMQ version is %d.%d.%d\n", major, minor, patch);
-
-	string 	tmp = executeScript("pwd");
-	cout << "PWD: " << tmp << endl;
-	tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
-	tmp = executeScript("chmod +x " + launchRouterClientScript + " && echo ok");
-    string servAdress = executeScript("./" + getAddressScript);
-    servAdress.erase(remove(servAdress.begin(), servAdress.end(), '\n'), servAdress.end());
-    cout << "servAdress " << servAdress << endl;
-
-    //  Prepare our context and socket
-    cout << "Creating socket at tcp://*:" << serverPortNumber << endl;
-    zmq::context_t context (1);
-    zmq::socket_t socket (context, ZMQ_PAIR);
-    ostringstream oss;
-    oss << "tcp://*:" << serverPortNumber;
-    socket.bind (oss.str().c_str());
-    oss.str("");
-
-    // Launching router and clients
-    /*oss << "./" << launchRouterClientScript << " " << servAdress << " " << nb_Chunks;
-    tmp = executeScript(oss.str());
-    oss.str("");
-    cout << tmp << endl;*/
-
-    // Wait for router to send its address
-    cout << "Waiting for router to send its address" << endl;
-    zmq::message_t message;
-    socket.recv(&message);
-    string routerAddress = string(static_cast<char*>(message.data()), message.size());
-    routerAddress.erase(remove(routerAddress.begin(), routerAddress.end(), '\n'), routerAddress.end());
-    cout << "Received router address: " << routerAddress << endl;
-
-    // Reply with "Connected!"
-    string replyStr = "Connected!";
-    int size = replyStr.size();
-    zmq::message_t reply(size);
-    memcpy(reply.data (), replyStr.c_str(), size);
-    socket.send(reply);
-
-    cout << "Waiting for others to connect" << endl;
-    zmq::message_t goSignal;
-    socket.recv(&goSignal);
-    std::string signalStr = std::string(static_cast<char*>(goSignal.data()), goSignal.size());
-    cout << "Let's go!" << "\n" << endl;
-
-    if(signalStr.compare("GO")!=0){
-        cout << "ERROR: something went wrong on the server" << endl;
-        return -1;
-    }else{
-        // Let's receive some data and compute the stats in parallel
-        pthread_t receiveDataThread;
-        pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&socket));
-        computeStats();
-    }
-
-    //close all sockets
-
-    return 0;
-}
+static const string getAddressScript = "src/client_server/getAddress.sh";
+static const string launchRouterClientScript = "src/client_server/launchEverything.sh";
 
 MTS_NAMESPACE_BEGIN
 
@@ -259,6 +153,108 @@ public:
 		m_running = false;
 	}
 
+    string executeScript(string script){
+        FILE *lsofFile_p = popen(script.c_str(), "r");
+
+        if (!lsofFile_p)
+        {
+            return string("-1");
+        }
+
+        char buffer[1024];
+        char *line_p = fgets(buffer, sizeof(buffer), lsofFile_p);
+        pclose(lsofFile_p);
+        return string(line_p);
+    }
+
+    void computeStats(){
+        while(1){
+            cout << "Crunching numbers, grr...\n" << endl;
+            sleep(5);
+        }
+    }
+
+    int serverMainLoop (int nb_Chunks) {
+
+    	int major, minor, patch;
+        zmq_version (&major, &minor, &patch); printf ("Current ØMQ version is %d.%d.%d\n", major, minor, patch);
+
+    	string 	tmp = executeScript("pwd");
+    	cout << "PWD: " << tmp << endl;
+    	tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
+    	tmp = executeScript("chmod +x " + launchRouterClientScript + " && echo ok");
+        string servAdress = executeScript("./" + getAddressScript);
+        servAdress.erase(remove(servAdress.begin(), servAdress.end(), '\n'), servAdress.end());
+        cout << "servAdress " << servAdress << endl;
+
+        //  Prepare our context and socket
+        cout << "Creating socket at tcp://*:" << serverPortNumber << endl;
+        zmq::context_t context (1);
+        zmq::socket_t socket (context, ZMQ_PAIR);
+        ostringstream oss;
+        oss << "tcp://*:" << serverPortNumber;
+        socket.bind (oss.str().c_str());
+        oss.str("");
+
+        // Launching router and clients
+        /*oss << "./" << launchRouterClientScript << " " << servAdress << " " << nb_Chunks;
+        tmp = executeScript(oss.str());
+        oss.str("");
+        cout << tmp << endl;*/
+
+        // Wait for router to send its address
+        cout << "Waiting for router to send its address" << endl;
+        zmq::message_t message;
+        socket.recv(&message);
+        string routerAddress = string(static_cast<char*>(message.data()), message.size());
+        routerAddress.erase(remove(routerAddress.begin(), routerAddress.end(), '\n'), routerAddress.end());
+        cout << "Received router address: " << routerAddress << endl;
+
+        // Reply with "Connected!"
+        string replyStr = "Connected!";
+        int size = replyStr.size();
+        zmq::message_t reply(size);
+        memcpy(reply.data (), replyStr.c_str(), size);
+        socket.send(reply);
+
+        cout << "Waiting for others to connect" << endl;
+        zmq::message_t goSignal;
+        socket.recv(&goSignal);
+        std::string signalStr = std::string(static_cast<char*>(goSignal.data()), goSignal.size());
+        cout << "Let's go!" << "\n" << endl;
+
+        if(signalStr.compare("GO")!=0){
+            cout << "ERROR: something went wrong on the server" << endl;
+            return -1;
+        }else{
+            // Let's receive some data and compute the stats in parallel
+            pthread_t receiveDataThread;
+            pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&socket));
+            computeStats();
+        }
+
+        //close all sockets
+
+        return 0;
+    }
+
+    static void * receiveData(void * arg){
+
+        zmq::socket_t * socket = (zmq::socket_t *)arg;
+
+        // Poll through the messages
+        while (1) {
+            // Check if we received a message
+            zmq::message_t message;
+            socket->recv(&message);
+            string messageStr = string(static_cast<char*>(message.data()), message.size());
+            cout << "Received \"" << messageStr << "\"" << endl;
+        }
+
+        pthread_exit (NULL);
+        return NULL;
+    }
+
 	int sum_poly(std::vector<unsigned int> poly_count, Point3i min, Point3i max, Point3i n_cell){
 		unsigned int n_poly = 0;
 		for(float x=min[0]; x < max[0]; x++){
@@ -338,8 +334,6 @@ public:
 		//Count polygons
 		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++){
 			for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
-				//const BSDF *bsdf = meshes[mesh_id]->getBSDF();
-				// bsdf->getID();
 				if(TAABB<Point>(cells[cell_id]).overlaps(meshes[mesh_id]->getAABB())){
 					//Count poly in box
 					Triangle * triangles = meshes[mesh_id]->getTriangles();
@@ -570,8 +564,7 @@ public:
 			const Emitter * emit = emitters[i].get();
 			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
 			if(!emit->isEnvironmentEmitter()){
-				const Shape * shape = emit->getShape();
-
+				//const Shape * shape = emit->getShape();
 			}
 		}
 
