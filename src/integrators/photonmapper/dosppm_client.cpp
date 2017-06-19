@@ -27,14 +27,145 @@
 
 #include <utility>
 
+#include <zmq.hpp>
+#include <cstdio>
+#include <sstream>
+#include <unistd.h>
+
+#include "../../client_server/messagesAndPorts.h"
 
 #if defined(MTS_OPENMP)
 # include <omp.h>
 #endif
 
+using namespace std;
+
+void * receiveData(void * arg);
+void mainCycle(zmq::socket_t * socket);
+int getPortNumber(zmq::socket_t * socket, string id);
+string getRandomRecipient();
+int clientStartup();
+
+int clientStartup(){
+	// TODO: read this from a file created by the script that launches clients
+    string routerAddr, id, portNumber;
+    /*if(argc != 3){
+        cout << "ERROR: please pass the router address and id as arguments" << endl;
+        return -1;
+    }else{
+        ostringstream oss;
+        portNumber = argv[1];
+        oss << "tcp://" << portNumber << ":" << handshakePortNumber;
+        routerAddr = oss.str(); 
+        id = argv[2];
+        cout << " rout: " << routerAddr << endl;
+    }*/
+
+    // TODO: Remove this
+    srand (time(NULL));
+
+    //  Prepare our context and socket
+    zmq::context_t context (1);
+    zmq::socket_t handshakeSocket (context, ZMQ_REQ);
+
+    cout << "\nConnecting to router handshake socket at: " << routerAddr << "\n" << endl;
+    handshakeSocket.connect(routerAddr.c_str());
+
+    int portNbr = getPortNumber(&handshakeSocket, id);
+    handshakeSocket.close();
+
+    cout << "Connecting to router socket at port " << portNbr << endl;
+    ostringstream oss;
+    oss << "tcp://" << portNumber << ":" << portNbr;
+    routerAddr = oss.str();
+    zmq::socket_t communicationSocket (context, ZMQ_PAIR);
+    communicationSocket.connect (routerAddr.c_str());
+
+    cout << "Waiting for others to connect" << endl;
+    zmq::message_t reply;
+    communicationSocket.recv(&reply);
+    string rpl = string(static_cast<char*>(reply.data()), reply.size());
+    cout << "Let's go!" << "\n" << endl;
+
+    if(rpl.compare("GO")!=0){
+        cout << "ERROR: something went wrong on the router" << endl;
+        return -1;
+    }else{
+        // Let's receive the incoming data
+        pthread_t receiveDataThread;
+        pthread_create(&receiveDataThread, NULL, receiveData, (void*)(&communicationSocket));
+        mainCycle(&communicationSocket);
+    }
+
+    return 0;	
+}
+
+int getPortNumber(zmq::socket_t * socket, string id){
+    cout << "Asking router for port number" << endl;
+
+    //  Ask the router for our port
+    string requestStr(string("firstHandShake-") + id.c_str());
+   
+    int size = requestStr.size();
+    zmq::message_t message (size);
+    memcpy (message.data (), requestStr.c_str(), size);
+    cout << "Sending obj " << requestStr << endl;
+    socket->send(message);
+
+    //  Wait for the router to respond
+    zmq::message_t reply;
+    socket->recv(&reply);
+    string rpl = string(static_cast<char*>(reply.data()), reply.size());
+    //cout << "Received \"" << rpl << "\"" << endl;
+    int portNbr;
+    istringstream(rpl) >> portNbr;
+    cout << "Received port number " << portNbr << endl;
+
+    return portNbr;
+}
+
+void * receiveData(void * arg){
+    zmq::socket_t * socket((zmq::socket_t *)arg);
+    while (true) {
+        zmq::message_t request;
+
+        //  Wait for next request from client
+        socket->recv(&request);
+        string rpl = string(static_cast<char*>(request.data()), request.size());
+        cout << "Received \"" << rpl << "\"" << endl;
+
+    }
+    pthread_exit (NULL);
+    return NULL;
+}
+
+void mainCycle(zmq::socket_t * socket){
+    while(1){
+        cout << "Computing photons, grr..." << endl;
+        sleep(5);
+        cout << "Computing rays, grr..." << endl;
+        sleep(5);
+        cout << "Sending things over:" << endl;
+        for (int i = 0; i != 10; i++) {
+            ostringstream oss;
+            oss << "Photon/Ray " << i;
+            string objStr = oss.str();
+            string recipient = getRandomRecipient();
+            sendMessage(socket, objStr, recipient);
+        }
+        cout << endl;
+    }
+}
+
+string getRandomRecipient(){
+    string entities[3] = {"chunk0", "chunk1", "server"};
+    int idx = rand() % 3;
+    return entities[idx];
+}
+
 MTS_NAMESPACE_BEGIN
 
-/*!\plugin{dosppm}{Distributed out of core stochastic progressive photon mapping integrator}
+/*!\plugin{dosppm_client}{Distributed out of core stochastic progressive photon mapping integrator}
  * \order{8}
  * \parameters{
  *     \parameter{maxDepth}{\Integer}{Specifies the longest path depth
@@ -87,7 +218,7 @@ MTS_NAMESPACE_BEGIN
  		 return o;
  	}
  };
-class DOSPPMIntegrator : public Integrator {
+class DOSPPMClientIntegrator : public Integrator {
 public:
 	/// Represents one individual PPM gather point including relevant statistics
 	struct GatherPoint {
@@ -103,7 +234,7 @@ public:
 		inline GatherPoint() : weight(0.0f), flux(0.0f), emission(0.0f), N(0.0f) { }
 	};
 
-	DOSPPMIntegrator(const Properties &props) : Integrator(props) {
+	DOSPPMClientIntegrator(const Properties &props) : Integrator(props) {
 		/* Initial photon query radius (0 = infer based on scene size and sensor resolution) */
 		m_initialRadius = props.getFloat("initialRadius", 0);
 		/* Alpha parameter from the paper (influences the speed, at which the photon radius is reduced) */
@@ -130,7 +261,7 @@ public:
 			Log(EError, "Maximum number of Passes must either be set to \"-1\" or \"1\" or higher!");
 	}
 
-	DOSPPMIntegrator(Stream *stream, InstanceManager *manager)
+	DOSPPMClientIntegrator(Stream *stream, InstanceManager *manager)
 	 : Integrator(stream, manager) { }
 
 	void serialize(Stream *stream, InstanceManager *manager) const {
@@ -274,6 +405,8 @@ public:
 		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
 	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
 
+		//cout << "This: " << this->toString() << endl;
+
 		// Create the subscene folder and recreate it
 		std::string folderPath("/tmp/subscene/");
 		fs::path dir(folderPath.c_str());
@@ -286,12 +419,36 @@ public:
 		std::ofstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
 	    std::string line;
 	    std::string shape("<shape");
+	    std::string endShape("</shape");
         std::string integrator("<integrator type=");
+        std::string envmap("<emitter type=\"envmap\"");
+        std::string emitter("<emitter");
+        std::string endScene("</scene");
+		
+        // For now I store the lights in all the chunks. Couldn't fiugre out a better way.
 		while(getline(src, line)) {
 		    if (line.find(shape, 0) != std::string::npos) {
-		        break;
+		    	std::string emitterShape(line);
+		        bool isEmit = false;
+		        while(getline(src, line)) {
+		        	emitterShape += "\n";
+		        	emitterShape += line;
+		        	if (line.find(emitter, 0) != std::string::npos) {
+	        	 		isEmit = true;
+	        	 	}
+	        	 	if (line.find(endShape, 0) != std::string::npos) {
+	        	 		if(isEmit){
+	        	 			sceneTemplate << emitterShape << endl;
+						}
+        	 			break;
+	        	 	}
+		        }
+		    }else if (line.find(envmap, 0) != std::string::npos) {
+		        sceneTemplate << line << endl;
 		    }else if (line.find(integrator, 0) != std::string::npos) {
-		        sceneTemplate << "<integrator type=\"sppm\" >" << endl;
+		        sceneTemplate << integrator << "\"sppm\" >" << endl;
+		    }else if(line.find(endScene, 0) != std::string::npos){
+		    	break;
 		    }else{
 		    	sceneTemplate << line << endl;
 		    }
@@ -412,6 +569,25 @@ public:
 				cout << "Created " << objName << endl;
 			}
 		}
+
+
+		// Let's handle the lights now
+
+		// C'est grave la merde, aucune idée de comment gérer ça
+
+		const ref_vector<Emitter> &emitters = scene->getEmitters();
+		cout << "Nb emitters: " << emitters.size() << endl;
+		
+		for(unsigned int i =0; i<emitters.size(); i++){
+			const Emitter * emit = emitters[i].get();
+			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
+			if(!emit->isEnvironmentEmitter()){
+				const Shape * shape = emit->getShape();
+
+			}
+		}
+
+
 		cout << "Objs for chunk " << chunkNb << " were created\n" << endl;
 		subscene << "</scene>" << endl;
 		sceneTemplate.close();
@@ -486,6 +662,7 @@ public:
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
 			int sceneResID, int sensorResID, int samplerResID) {
 		Integrator::preprocess(scene, queue, job, sceneResID, sensorResID, samplerResID);
+
 		subdivide_scene(scene);
 
 
@@ -745,7 +922,7 @@ public:
 
 	std::string toString() const {
 		std::ostringstream oss;
-		oss << "DOSPPMIntegrator[" << endl
+		oss << "DOSPPMClientIntegrator[" << endl
 			<< "  maxDepth = " << m_maxDepth << "," << endl
 			<< "  rrDepth = " << m_rrDepth << "," << endl
 			<< "  initialRadius = " << m_initialRadius << "," << endl
@@ -772,6 +949,6 @@ private:
 	int m_maxPasses;
 };
 
-MTS_IMPLEMENT_CLASS(DOSPPMIntegrator, false, Integrator)
-MTS_EXPORT_PLUGIN(DOSPPMIntegrator, "Distributed out of core stochastic progressive photon mapper");
+MTS_IMPLEMENT_CLASS(DOSPPMClientIntegrator, false, Integrator)
+MTS_EXPORT_PLUGIN(DOSPPMClientIntegrator, "Distributed out of core stochastic progressive photon mapper");
 MTS_NAMESPACE_END

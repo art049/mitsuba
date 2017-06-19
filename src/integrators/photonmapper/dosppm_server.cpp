@@ -150,7 +150,7 @@ int serverMainLoop (int nb_Chunks) {
 
 MTS_NAMESPACE_BEGIN
 
-/*!\plugin{dosppm}{Distributed out of core stochastic progressive photon mapping integrator}
+/*!\plugin{dosppm_server}{Distributed out of core stochastic progressive photon mapping integrator}
  * \order{8}
  * \parameters{
  *     \parameter{maxDepth}{\Integer}{Specifies the longest path depth
@@ -203,7 +203,7 @@ MTS_NAMESPACE_BEGIN
  		 return o;
  	}
  };
-class DOSPPMIntegrator : public Integrator {
+class DOSPPMServerIntegrator : public Integrator {
 public:
 	/// Represents one individual PPM gather point including relevant statistics
 	struct GatherPoint {
@@ -219,7 +219,7 @@ public:
 		inline GatherPoint() : weight(0.0f), flux(0.0f), emission(0.0f), N(0.0f) { }
 	};
 
-	DOSPPMIntegrator(const Properties &props) : Integrator(props) {
+	DOSPPMServerIntegrator(const Properties &props) : Integrator(props) {
 		/* Initial photon query radius (0 = infer based on scene size and sensor resolution) */
 		m_initialRadius = props.getFloat("initialRadius", 0);
 		/* Alpha parameter from the paper (influences the speed, at which the photon radius is reduced) */
@@ -246,7 +246,7 @@ public:
 			Log(EError, "Maximum number of Passes must either be set to \"-1\" or \"1\" or higher!");
 	}
 
-	DOSPPMIntegrator(Stream *stream, InstanceManager *manager)
+	DOSPPMServerIntegrator(Stream *stream, InstanceManager *manager)
 	 : Integrator(stream, manager) { }
 
 	void serialize(Stream *stream, InstanceManager *manager) const {
@@ -392,6 +392,8 @@ public:
 		//https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way
 	    //https://stackoverflow.com/questions/12463750/c-searching-text-file-for-a-particular-string-and-returning-the-line-number-wh
 
+		//cout << "This: " << this->toString() << endl;
+
 		// Create the subscene folder and recreate it
 		std::string folderPath("/tmp/subscene/");
 		fs::path dir(folderPath.c_str());
@@ -404,12 +406,36 @@ public:
 		std::ofstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
 	    std::string line;
 	    std::string shape("<shape");
+	    std::string endShape("</shape");
         std::string integrator("<integrator type=");
+        std::string envmap("<emitter type=\"envmap\"");
+        std::string emitter("<emitter");
+        std::string endScene("</scene");
+		
+        // For now I store the lights in all the chunks. Couldn't fiugre out a better way.
 		while(getline(src, line)) {
 		    if (line.find(shape, 0) != std::string::npos) {
-		        break;
+		    	std::string emitterShape(line);
+		        bool isEmit = false;
+		        while(getline(src, line)) {
+		        	emitterShape += "\n";
+		        	emitterShape += line;
+		        	if (line.find(emitter, 0) != std::string::npos) {
+	        	 		isEmit = true;
+	        	 	}
+	        	 	if (line.find(endShape, 0) != std::string::npos) {
+	        	 		if(isEmit){
+	        	 			sceneTemplate << emitterShape << endl;
+						}
+        	 			break;
+	        	 	}
+		        }
+		    }else if (line.find(envmap, 0) != std::string::npos) {
+		        sceneTemplate << line << endl;
 		    }else if (line.find(integrator, 0) != std::string::npos) {
-		        sceneTemplate << "<integrator type=\"sppm\" >" << endl;
+		        sceneTemplate << integrator << "\"sppm\" >" << endl;
+		    }else if(line.find(endScene, 0) != std::string::npos){
+		    	break;
 		    }else{
 		    	sceneTemplate << line << endl;
 		    }
@@ -530,6 +556,25 @@ public:
 				cout << "Created " << objName << endl;
 			}
 		}
+
+
+		// Let's handle the lights now
+
+		// C'est grave la merde, aucune idée de comment gérer ça
+
+		const ref_vector<Emitter> &emitters = scene->getEmitters();
+		cout << "Nb emitters: " << emitters.size() << endl;
+		
+		for(unsigned int i =0; i<emitters.size(); i++){
+			const Emitter * emit = emitters[i].get();
+			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
+			if(!emit->isEnvironmentEmitter()){
+				const Shape * shape = emit->getShape();
+
+			}
+		}
+
+
 		cout << "Objs for chunk " << chunkNb << " were created\n" << endl;
 		subscene << "</scene>" << endl;
 		sceneTemplate.close();
@@ -604,8 +649,9 @@ public:
 	bool preprocess(const Scene *scene, RenderQueue *queue, const RenderJob *job,
 			int sceneResID, int sensorResID, int samplerResID) {
 		Integrator::preprocess(scene, queue, job, sceneResID, sensorResID, samplerResID);
-		int nbChunks = subdivide_scene(scene);
-		serverMainLoop(nbChunks);
+
+		int nb_Chunks = subdivide_scene(scene);
+		serverMainLoop(nb_Chunks);
 
 
 		if (m_initialRadius == 0) {
@@ -864,7 +910,7 @@ public:
 
 	std::string toString() const {
 		std::ostringstream oss;
-		oss << "DOSPPMIntegrator[" << endl
+		oss << "DOSPPMServerIntegrator[" << endl
 			<< "  maxDepth = " << m_maxDepth << "," << endl
 			<< "  rrDepth = " << m_rrDepth << "," << endl
 			<< "  initialRadius = " << m_initialRadius << "," << endl
@@ -891,6 +937,6 @@ private:
 	int m_maxPasses;
 };
 
-MTS_IMPLEMENT_CLASS(DOSPPMIntegrator, false, Integrator)
-MTS_EXPORT_PLUGIN(DOSPPMIntegrator, "Distributed out of core stochastic progressive photon mapper");
+MTS_IMPLEMENT_CLASS(DOSPPMServerIntegrator, false, Integrator)
+MTS_EXPORT_PLUGIN(DOSPPMServerIntegrator, "Distributed out of core stochastic progressive photon mapper");
 MTS_NAMESPACE_END
