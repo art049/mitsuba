@@ -500,22 +500,13 @@ public:
 			if(TAABB<Point>(chunk).overlaps(meshes[mesh_id]->getAABB())){
 				// If so, make an obj out of the triangles that intersect the chunk
 				//cout << mesh_id << endl;
-				meshes[mesh_id]->computeNormals(true);
+				//meshes[mesh_id]->computeNormals(true);
                 Triangle * f = meshes[mesh_id]->getTriangles();
 				Normal * vn = meshes[mesh_id]->getVertexNormals();
 				bool hasVertexNormals = meshes[mesh_id]->hasVertexNormals();
 				Point2 * vt = meshes[mesh_id]->getVertexTexcoords();
 				bool hasVertexTexcoords = meshes[mesh_id]->hasVertexTexcoords();
 			 	Point * v = meshes[mesh_id]->getVertexPositions();
-
-                if(chunkNb == 3 && mesh_id == 119){
-                    cout << "CHUNK" << chunkNb << " obj" << mesh_id << endl;
-                    cout << "hasNorms: " << hasVertexNormals << endl;
-                    meshes[mesh_id]->computeNormals(true);
-                    cout << hasVertexNormals << endl;
-                }
-
-                cout << "Processing mesh n: " << mesh_id << " id " << meshes[mesh_id]->getID() << endl;
 
 				// Make a new .obj from that file
 				std::string objName(chunkName);
@@ -537,6 +528,7 @@ public:
 					oss << "v " << v[i][0] << " " << v[i][1] << " " << v[i][2] << "\n";
 					vstr += oss.str();
 					oss.str("");
+
 					// Check for segfaults then add vertices normals to the .obj
 					if(hasVertexNormals){
 						oss << "vn " << vn[i][0] << " " << vn[i][1] << " " << vn[i][2] << "\n";
@@ -554,8 +546,12 @@ public:
 					// @Arthur: tester si le triangle intersecte le chunk
 					if(TAABB<Point>(chunk).overlaps(f[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
 						std::ostringstream oss;
-						oss << "f " << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << " " << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << " " << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "\n";
-						fstr += oss.str();
+						if(!hasVertexNormals){
+                            oss << "f " << f[tri_id].idx[0]+1 << " " << f[tri_id].idx[1]+1 << " " << f[tri_id].idx[2]+1 << "\n";
+                        }else{
+                            oss << "f " << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << " " << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << " " << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "\n";
+                        }
+                        fstr += oss.str();
 					}
 				}
 
@@ -565,6 +561,7 @@ public:
 				outfile << vnstr;
 				outfile << vtstr;
 				outfile << fstr;
+
 				outfile.close();
 
 				const BSDF *bsdf = meshes[mesh_id]->getBSDF();
@@ -574,7 +571,6 @@ public:
                               << "\t\t\t<matrix value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\"/>\n"
                               << "\t\t</transform>\n";
                 if(!hasVertexNormals){
-                    cout << "!HAS_VERTEX_NORMALS " << objName << endl; 
                     subscene  << "\t\t<boolean name=\"faceNormals\" value=\"true\" />\n";
                 }
 				subscene	  << "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
@@ -589,11 +585,11 @@ public:
 		// C'est grave la merde, aucune idée de comment gérer ça
 
 		const ref_vector<Emitter> &emitters = scene->getEmitters();
-		cout << "Nb emitters: " << emitters.size() << endl;
+		//cout << "Nb emitters: " << emitters.size() << endl;
 
 		for(unsigned int i =0; i<emitters.size(); i++){
 			const Emitter * emit = emitters[i].get();
-			cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
+			//cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
 			if(!emit->isEnvironmentEmitter()){
 				//const Shape * shape = emit->getShape();
 			}
