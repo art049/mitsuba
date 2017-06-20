@@ -87,17 +87,28 @@ MTS_NAMESPACE_BEGIN
  *    models.
  * }
  */
-//TODO: Move this struc into a header
- struct iAABB {
+
+class iAABB {
+ public:
  	Point3i min;
  	Point3i max;
  	iAABB(Point3i min=Point3i(), Point3i max=Point3i()): min(min), max(max){}
+  AABB toAABB(float grid_size){
+    Point min = Point(this->min[0] * grid_size,
+      this->min[1] * grid_size,
+      this->min[2] * grid_size);
+    Point max = Point(this->max[0] * grid_size,
+        this->max[1] * grid_size,
+        this->max[2] * grid_size);
+    return AABB(min, max);
+  }
  	friend std::ostream& operator << ( std::ostream& o, const iAABB& e ) {
  		 o << "min: " << e.min[0] << " " << e.min[1] << " " <<e.min[2]
 		   <<", max: " << e.max[0] << " " << e.max[1] << " " <<e.max[2];
  		 return o;
  	}
  };
+
 class DOSPPMServerIntegrator : public Integrator {
 public:
 	/// Represents one individual PPM gather point including relevant statistics
@@ -348,36 +359,40 @@ public:
 		  cout << "Cell " << cell_id << " has " << poly_count[cell_id] << " polygons" << endl;
 
 
-		// BUILD CHUNKS
-		int split_depth = 3;
-		std::vector<iAABB> chunks;
-		std::pair<iAABB, iAABB> cur_chunks;
+          // BUILD CHUNKS
+  		int split_depth = 3;
+  		std::vector<iAABB> i_chunks;
+  		std::pair<iAABB, iAABB> cur_chunks;
 
-		chunks.push_back(iAABB(Point3i(0,0,0), n_cell));
-		cout << endl;
-		for(int depth = 0; depth < split_depth; depth++){
-			std::vector<iAABB> tmp_chunks;
-			for(unsigned int i = 0; i < chunks.size(); i++){
-				cur_chunks = split_in_chunks(poly_count, &chunks[i], n_cell);
-				tmp_chunks.push_back(cur_chunks.first);
-				tmp_chunks.push_back(cur_chunks.second);
-			}
-			chunks = tmp_chunks;
-		}
-		cout << endl;
+  		i_chunks.push_back(iAABB(Point3i(0,0,0), n_cell));
+  		cout << endl;
+  		for(int depth = 0; depth < split_depth; depth++){
+  			std::vector<iAABB> tmp_chunks;
+  			for(unsigned int i = 0; i < i_chunks.size(); i++){
+  				cur_chunks = split_in_chunks(poly_count, &i_chunks[i], n_cell);
+  				tmp_chunks.push_back(cur_chunks.first);
+  				tmp_chunks.push_back(cur_chunks.second);
+  			}
+  			i_chunks = tmp_chunks;
+  		}
+  		cout << endl;
+  		std::vector<AABB> chunks;
+  		for(std::vector<iAABB>::iterator it = i_chunks.begin(); it != i_chunks.end(); it++){
+  			chunks.push_back(it->toAABB(grid_size));
+  		}
 
-		cout << "CHUNKS:" << endl;
-		for(unsigned int i = 0; i < chunks.size(); i++){
-			cout << chunks[i] << endl;
-		}
-		cout << endl;
+  		cout << "CHUNKS:" << endl;
+  		for(unsigned int i = 0; i < chunks.size(); i++){
+  			cout << "Index : "<< i_chunks[i] << endl;
+  		}
+  		cout << endl;
 
-		cout << "SUBSCENE CREATION" << endl;
-		createSubSceneTemplate(scene);
-		for(unsigned int i = 0; i < chunks.size(); i++){
-			createSubScene(scene, meshes, chunks[i], i);
-		}
-		cout << endl;
+  		cout << "SUBSCENE CREATION" << endl;
+  		createSubSceneTemplate(scene);
+  		for(unsigned int i = 0; i < chunks.size(); i++){
+  			createSubScene(scene, meshes, chunks[i], i);
+  		}
+  		cout << endl;
 
 		return chunks.size();
 	}
@@ -441,7 +456,7 @@ public:
 
 	}
 
-	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, iAABB chunk, int chunkNb){
+	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, AABB chunk, int chunkNb){
 
 		// Create directory for this subscene
 		std::string folderPath("");
@@ -472,26 +487,35 @@ public:
 		// Loop through the meshes
 
         //cout << "Chunk: " << chunk << endl;
-        TAABB<Point> chunkAABB(Point(chunk.min), Point(chunk.max));
         //cout << "ChunkTAABB: " << chunkAABB.toString() << endl;
         std::string chunkName("chunk");
 		oss << chunkNb;
 		chunkName += oss.str();
 
-		for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
+        for(unsigned int mesh_id = 0; mesh_id < meshes.size(); mesh_id++){
 
 			// Check if the mesh intersects the chunk
 
 			// @Arthur: tester si le mesh intersecte le chunk => ce test seul est déjà éliminatoire
-			if(chunkAABB.overlaps(meshes[mesh_id]->getAABB())){
+			if(TAABB<Point>(chunk).overlaps(meshes[mesh_id]->getAABB())){
 				// If so, make an obj out of the triangles that intersect the chunk
 				//cout << mesh_id << endl;
-				Triangle * f = meshes[mesh_id]->getTriangles();
+				meshes[mesh_id]->computeNormals(true);
+                Triangle * f = meshes[mesh_id]->getTriangles();
 				Normal * vn = meshes[mesh_id]->getVertexNormals();
 				bool hasVertexNormals = meshes[mesh_id]->hasVertexNormals();
 				Point2 * vt = meshes[mesh_id]->getVertexTexcoords();
 				bool hasVertexTexcoords = meshes[mesh_id]->hasVertexTexcoords();
 			 	Point * v = meshes[mesh_id]->getVertexPositions();
+
+                if(chunkNb == 3 && mesh_id == 119){
+                    cout << "CHUNK" << chunkNb << " obj" << mesh_id << endl;
+                    cout << "hasNorms: " << hasVertexNormals << endl;
+                    meshes[mesh_id]->computeNormals(true);
+                    cout << hasVertexNormals << endl;
+                }
+
+                cout << "Processing mesh n: " << mesh_id << " id " << meshes[mesh_id]->getID() << endl;
 
 				// Make a new .obj from that file
 				std::string objName(chunkName);
@@ -528,29 +552,33 @@ public:
 
 				for(unsigned int tri_id=0; tri_id<meshes[mesh_id]->getTriangleCount(); tri_id++){
 					// @Arthur: tester si le triangle intersecte le chunk
-					//if(chunkAABB.overlaps(f[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
+					if(TAABB<Point>(chunk).overlaps(f[tri_id].getAABB(meshes[mesh_id]->getVertexPositions()))){
 						std::ostringstream oss;
 						oss << "f " << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << "/" << f[tri_id].idx[0]+1 << " " << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << "/" << f[tri_id].idx[1]+1 << " " << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "/" << f[tri_id].idx[2]+1 << "\n";
 						fstr += oss.str();
-					//}
+					}
 				}
 
 
 				//cout << vnstr << endl;
-				outfile << vstr << std::endl;
-				outfile << vnstr << std::endl;
-				outfile << vtstr << std::endl;
-				outfile << fstr << std::endl;
+				outfile << vstr;
+				outfile << vnstr;
+				outfile << vtstr;
+				outfile << fstr;
 				outfile.close();
 
 				const BSDF *bsdf = meshes[mesh_id]->getBSDF();
-				subscene 	<< "\t<shape type=\"obj\" >\n"
-							<< "\t\t<string name=\"filename\" value=\"" << objName << "\" />\n"
-							<< "\t\t<transform name=\"toWorld\" >\n"
-							<< "\t\t\t<matrix value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\"/>\n"
-							<< "\t\t</transform>\n"
-							<< "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
-							<< "\t</shape>" << endl;
+				subscene 	  << "\t<shape type=\"obj\" >\n"
+		                      << "\t\t<string name=\"filename\" value=\"" << objName << "\" />\n"
+                              << "\t\t<transform name=\"toWorld\" >\n"
+                              << "\t\t\t<matrix value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\"/>\n"
+                              << "\t\t</transform>\n";
+                if(!hasVertexNormals){
+                    cout << "!HAS_VERTEX_NORMALS " << objName << endl; 
+                    subscene  << "\t\t<boolean name=\"faceNormals\" value=\"true\" />\n";
+                }
+				subscene	  << "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
+						      << "\t</shape>" << endl;
 				cout << "Created " << objName << endl;
 			}
 		}
@@ -720,7 +748,7 @@ public:
 #endif
 
 		int it = 0;
-		while (m_running && (m_maxPasses == -1 || it < m_maxPasses)) {
+        while (m_running && (m_maxPasses == -1 || it < m_maxPasses)) {
 			distributedRTPass(scene, samplers);
 			photonMapPass(++it, queue, job, film, sceneResID,
 					sensorResID, samplerResID);
