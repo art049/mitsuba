@@ -27,6 +27,7 @@
 
 #include <utility>
 
+#include <mitsuba/dosppm.h>
 
 #if defined(MTS_OPENMP)
 # include <omp.h>
@@ -76,12 +77,13 @@ MTS_NAMESPACE_BEGIN
  *    models.
  * }
  */
-//TODO: Move this struc into a header
+
+ // TODO: move to header file
  class iAABB {
  public:
- 	Point3i min;
- 	Point3i max;
- 	iAABB(Point3i min=Point3i(), Point3i max=Point3i()): min(min), max(max){}
+   Point3i min;
+   Point3i max;
+   iAABB(Point3i min=Point3i(), Point3i max=Point3i()): min(min), max(max){}
   AABB toAABB(float grid_size){
     Point min = Point(this->min[0] * grid_size,
       this->min[1] * grid_size,
@@ -91,12 +93,13 @@ MTS_NAMESPACE_BEGIN
         this->max[2] * grid_size);
     return AABB(min, max);
   }
- 	friend std::ostream& operator << ( std::ostream& o, const iAABB& e ) {
- 		 o << "min: " << e.min[0] << " " << e.min[1] << " " <<e.min[2]
-		   <<", max: " << e.max[0] << " " << e.max[1] << " " <<e.max[2];
- 		 return o;
- 	}
+   friend std::ostream& operator << ( std::ostream& o, const iAABB& e ) {
+      o << "min: " << e.min[0] << " " << e.min[1] << " " <<e.min[2]
+       <<", max: " << e.max[0] << " " << e.max[1] << " " <<e.max[2];
+      return o;
+   }
  };
+
 class DOSPPMIntegrator : public Integrator {
 public:
 	/// Represents one individual PPM gather point including relevant statistics
@@ -477,8 +480,9 @@ public:
 	}
 
 	//https://stackoverflow.com/questions/8593608/how-can-i-copy-a-directory-using-boost-filesystem
+
 	bool copyDir(fs::path const & source,fs::path const & destination)
-	{
+   {
 	    try
 	    {
 	        // Check whether the function call is valid
@@ -749,7 +753,7 @@ public:
 
 		sched->schedule(proc);
 		sched->wait(proc);
-
+    //TODO : change photonproc and eventually photonmap classes
 		ref<PhotonMap> photonMap = proc->getPhotonMap();
 		photonMap->build();
 		Log(EDebug, "Photon map full. Shot " SIZE_T_FMT " particles, excess photons due to parallelism: "
