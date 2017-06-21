@@ -190,9 +190,7 @@ public:
         communicationSocket->connect (routerAddr.c_str());
 
         cout << "Waiting for others to connect" << endl;
-        zmq::message_t reply;
-        communicationSocket->recv(&reply);
-        string rpl = string(static_cast<char*>(reply.data()), reply.size());
+        string rpl = receiveMessage(communicationSocket);
         cout << "Let's go!" << "\n" << endl;
 
         if(rpl.compare("GO")!=0){
@@ -220,9 +218,7 @@ public:
         socket->send(message);
 
         //  Wait for the router to respond
-        zmq::message_t reply;
-        socket->recv(&reply);
-        string rpl = string(static_cast<char*>(reply.data()), reply.size());
+        string rpl = receiveMessage(socket);
         //cout << "Received \"" << rpl << "\"" << endl;
         int portNbr;
         istringstream(rpl) >> portNbr;
@@ -234,13 +230,8 @@ public:
     static void * receiveData(void * arg){
         zmq::socket_t * socket((zmq::socket_t *)arg);
         while (true) {
-            zmq::message_t request;
-
-            //  Wait for next request from client
-            socket->recv(&request);
-            string rpl = string(static_cast<char*>(request.data()), request.size());
+            string rpl = receiveMessage(socket);
             cout << "Received \"" << rpl << "\"" << endl;
-
         }
         pthread_exit (NULL);
         return NULL;

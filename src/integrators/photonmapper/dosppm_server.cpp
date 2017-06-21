@@ -182,6 +182,7 @@ public:
         while(1){
             cout << "Crunching numbers, grr...\n" << endl;
             sleep(5);
+            //sendMessage();
         }
     }
 
@@ -215,9 +216,7 @@ public:
 
         // Wait for router to send its address
         cout << "Waiting for router to send its address" << endl;
-        zmq::message_t message;
-        socket.recv(&message);
-        string routerAddress = string(static_cast<char*>(message.data()), message.size());
+        string routerAddress = receiveMessage(&socket);
         routerAddress.erase(remove(routerAddress.begin(), routerAddress.end(), '\n'), routerAddress.end());
         cout << "Received router address: " << routerAddress << endl;
 
@@ -229,9 +228,7 @@ public:
         socket.send(reply);
 
         cout << "Waiting for others to connect" << endl;
-        zmq::message_t goSignal;
-        socket.recv(&goSignal);
-        std::string signalStr = std::string(static_cast<char*>(goSignal.data()), goSignal.size());
+        std::string signalStr = receiveMessage(&socket);
         cout << "Let's go!" << "\n" << endl;
 
         if(signalStr.compare("GO")!=0){
@@ -256,9 +253,7 @@ public:
         // Poll through the messages
         while (1) {
             // Check if we received a message
-            zmq::message_t message;
-            socket->recv(&message);
-            string messageStr = string(static_cast<char*>(message.data()), message.size());
+            string messageStr = receiveMessage(socket);
             cout << "Received \"" << messageStr << "\"" << endl;
         }
 
@@ -311,7 +306,7 @@ public:
 		// COMPUTE SCENE BB
 		//cout << scene->toString() << "\n" << endl;
 		AABB sceneBox = scene->getAABB();
-		float grid_size = 1.;
+		float grid_size = 1.0;
 		Point cell_offset = Point(grid_size, grid_size, grid_size);
 		cout << "\nScene corners" << endl;
 		for(int i = 0; i < 8; i++)
@@ -355,8 +350,8 @@ public:
 				}
 			}
 		}
-		for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++)
-		  cout << "Cell " << cell_id << " has " << poly_count[cell_id] << " polygons" << endl;
+		/*for(unsigned int cell_id=0; cell_id<cells.size(); cell_id++)
+		  cout << "Cell " << cell_id << " has " << poly_count[cell_id] << " polygons" << endl;*/
 
 
           // BUILD CHUNKS
@@ -576,6 +571,11 @@ public:
 				subscene	  << "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
 						      << "\t</shape>" << endl;
 				cout << "Created " << objName << endl;
+
+                string servAdress = executeScript("./" + getAddressScript);
+                std::ofstream config ((folderPath + "config.txt").c_str(), std::ofstream::trunc);
+                config << servAdress << chunkName << endl;
+                config.close();
 			}
 		}
 
@@ -585,13 +585,14 @@ public:
 		// C'est grave la merde, aucune idée de comment gérer ça
 
 		const ref_vector<Emitter> &emitters = scene->getEmitters();
-		//cout << "Nb emitters: " << emitters.size() << endl;
+		cout << "Nb emitters: " << emitters.size() << endl;
 
 		for(unsigned int i =0; i<emitters.size(); i++){
 			const Emitter * emit = emitters[i].get();
 			//cout << "Is it env: " << emit->isEnvironmentEmitter() << endl;
 			if(!emit->isEnvironmentEmitter()){
-				//const Shape * shape = emit->getShape();
+				const Shape * shape = emit->getShape();
+                cout << "Emit name: " << shape->getName() << endl;
 			}
 		}
 
