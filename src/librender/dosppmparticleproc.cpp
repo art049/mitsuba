@@ -131,6 +131,7 @@ void DOSPPMParticleTracer::process(const WorkUnit *workUnit, WorkResult *workRes
 		Ray ray;
 
 		if (m_emissionEvents) {
+		
 			/* Sample the position and direction component separately to
 			   generate emission events */
 			power = m_scene->sampleEmitterPosition(pRec, m_sampler->next2D());
@@ -231,7 +232,19 @@ void DOSPPMParticleTracer::process(const WorkUnit *workUnit, WorkResult *workRes
 				   extremely large, which adds unacceptable variance to output
 				   renderings.
 
-				   So for now, it is disabled. The adjoint particle tracer and the
+				   So for now, it is disablorkProcessor interface
+	// =============================================================
+
+	virtual ref<WorkUnit> createWorkUnit() const;
+	virtual void prepare();
+	virtual void process(const WorkUnit *workUnit, WorkResult *workResult,
+		const bool &stop);
+	void serialize(Stream *stream, InstanceManager *manager) const;
+
+	//! @}
+	// =============================================================
+
+	/**ed. The adjoint particle tracer and the
 				   photon mapping variants still use this factor for the last
 				   bounce -- just not for the intermediate ones, which introduces
 				   a small (though in practice not noticeable) amount of error. This
@@ -266,8 +279,7 @@ void DOSPPMParticleTracer::process(const WorkUnit *workUnit, WorkResult *workRes
 }
 
 void DOSPPMParticleTracer::handleEmission(const PositionSamplingRecord &pRec,
-		const Medium *medium, const Spectrum &weight) {
-		cout << "Emission" << endl; }
+		const Medium *medium, const Spectrum &weight) { }
 
 void DOSPPMParticleTracer::handleNewParticle() { }
 

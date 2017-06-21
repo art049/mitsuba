@@ -742,6 +742,7 @@ public:
 		ref<Scheduler> sched = Scheduler::getInstance();
 
 		/* Generate the global photon map */
+    cout << "Gather photon process " << endl;
 		ref<DOSPPMGatherPhotonProcess> proc = new DOSPPMGatherPhotonProcess(
 			DOSPPMGatherPhotonProcess::EAllSurfacePhotons, m_photonCount,
 			m_granularity, m_maxDepth == -1 ? -1 : m_maxDepth-1, m_rrDepth, true,
