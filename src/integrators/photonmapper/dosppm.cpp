@@ -165,7 +165,7 @@ public:
 		return n_poly;
 	}
 
-	std::pair<iAABB, iAABB> split_in_chunks(std::vector<unsigned int> poly_count, iAABB * parent, Point3i n_cell){
+	std::pair<iAABB, iAABB> split_in_chunks(std::vector<unsigned int> poly_count, iAABB * parent, Point3i n_cell, int* split_axis){
 		Point3i min(parent->min), max(parent->max);
 		unsigned int parent_poly_count = sum_poly(poly_count, min, max, n_cell);
 		int min_axis = -1, min_i = -1;
@@ -188,6 +188,7 @@ public:
 		}
 		Point3i min_offset_vector(0,0,0);
 		min_offset_vector[min_axis] = 1;
+        *split_axis = min_axis;
 		return std::make_pair(iAABB(min, Point3i(max - min_offset_vector * (max[min_axis] - min_i - 1))),
 		                 iAABB(Point3i(min + min_offset_vector * (min_i+1)), max));
 	}
@@ -251,19 +252,34 @@ public:
 		int split_depth = 3;
 		std::vector<iAABB> i_chunks;
 		std::pair<iAABB, iAABB> cur_chunks;
+        std::vector< std::vector<int> > neighborhood;
+        std::vector<int> empty_nbd(6, 0);
+        neighborhood.push_back(empty_nbd);
 
 		i_chunks.push_back(iAABB(Point3i(0,0,0), n_cell));
 		cout << endl;
 		for(int depth = 0; depth < split_depth; depth++){
 			std::vector<iAABB> tmp_chunks;
+            std::vector< std::vector<int> > tmp_neighborhood;
 			for(unsigned int i = 0; i < i_chunks.size(); i++){
-				cur_chunks = split_in_chunks(poly_count, &i_chunks[i], n_cell);
+                std::vector<int> nbd1(neighborhood.at(i)), nbd2(neighborhood.at(i));
+                int split_axis;
+				cur_chunks = split_in_chunks(poly_count, &i_chunks[i], n_cell, &split_axis);
 				tmp_chunks.push_back(cur_chunks.first);
 				tmp_chunks.push_back(cur_chunks.second);
+
+                // Neighborhood construction
+                nbd1.at(split_axis) = 2 * i;
+                nbd2.at(split_axis + 3) = 2 * i + 1;
+                tmp_neighborhood.push_back(nbd1);
+                tmp_neighborhood.push_back(nbd2);
 			}
 			i_chunks = tmp_chunks;
+            neighborhood = tmp_neighborhood;
 		}
 		cout << endl;
+
+        // Convert chunks from iAABBs to AABBs
 		std::vector<AABB> chunks;
 		for(std::vector<iAABB>::iterator it = i_chunks.begin(); it != i_chunks.end(); it++){
 			chunks.push_back(it->toAABB(grid_size));
@@ -367,6 +383,9 @@ public:
 		scenePath << folderPath << "subscene" << chunkNb << ".xml";
 		std::ofstream subscene(scenePath.str().c_str());
 		subscene << sceneTemplate.rdbuf();
+
+        // Add portals
+        cout << chunkNb << endl;
 
 		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
 

@@ -446,6 +446,8 @@ public:
 		std::ofstream subscene(scenePath.str().c_str());
 		subscene << sceneTemplate.rdbuf();
 
+        // Add portals
+
 		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
 
 		// Loop through the meshes
