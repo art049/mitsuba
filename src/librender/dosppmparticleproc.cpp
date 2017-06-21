@@ -280,5 +280,5 @@ void DOSPPMParticleTracer::handleMediumInteraction(int depth, int nullInteractio
 
 MTS_IMPLEMENT_CLASS(RangeWorkUnit, false, WorkUnit)
 MTS_IMPLEMENT_CLASS(DOSPPMParticleProcess, true, ParallelProcess)
-MTS_IMPLEMENT_CLASS(ParticleTracer, true, WorkProcessor)
+MTS_IMPLEMENT_CLASS(DOSPPMParticleTracer, true, WorkProcessor)
 MTS_NAMESPACE_END
