@@ -18,7 +18,7 @@
 
 #include <mitsuba/core/plugin.h>
 #include <mitsuba/core/bitmap.h>
-#include <mitsuba/render/gatherproc.h>
+#include <mitsuba/render/dosppmgatherproc.h>
 #include <mitsuba/render/renderqueue.h>
 
 #include <iostream>
@@ -742,8 +742,8 @@ public:
 		ref<Scheduler> sched = Scheduler::getInstance();
 
 		/* Generate the global photon map */
-		ref<GatherPhotonProcess> proc = new GatherPhotonProcess(
-			GatherPhotonProcess::EAllSurfacePhotons, m_photonCount,
+		ref<DOSPPMGatherPhotonProcess> proc = new DOSPPMGatherPhotonProcess(
+			DOSPPMGatherPhotonProcess::EAllSurfacePhotons, m_photonCount,
 			m_granularity, m_maxDepth == -1 ? -1 : m_maxDepth-1, m_rrDepth, true,
 			m_autoCancelGathering, job);
 

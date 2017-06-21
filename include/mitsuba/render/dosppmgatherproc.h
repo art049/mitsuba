@@ -32,7 +32,7 @@ MTS_NAMESPACE_BEGIN
  * class distributes the work over an arbitrary number of machines.
  * \ingroup librender
  */
-class MTS_EXPORT_RENDER DOSPPMGatherPhotonProcess : public ParticleProcess {
+class MTS_EXPORT_RENDER DOSPPMGatherPhotonProcess : public DOSPPMParticleProcess {
 public:
 	enum EGatherType {
 		/// Surface photons (indirect on diffuse surfaces, last bounce was not through a delta BSDF)
