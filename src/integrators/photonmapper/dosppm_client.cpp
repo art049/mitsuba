@@ -115,6 +115,7 @@ public:
 		Float N;
 		int depth;
 		Point2i pos;
+        string dest;
 
 		inline GatherPoint() : weight(0.0f), flux(0.0f), emission(0.0f), N(0.0f) { }
 	};
@@ -337,19 +338,19 @@ public:
         zmq::context_t context (1);
         string id;
         zmq::socket_t communicationSocket (context, ZMQ_PAIR);
-        clientStartup(&communicationSocket, &context, id);
+        //clientStartup(&communicationSocket, &context, id);
 
         int it = 0;
 		while (m_running && (m_maxPasses == -1 || it < m_maxPasses)) {
-			distributedRTPass(scene, samplers);
+			distributedRTPass(scene, samplers, &communicationSocket);
 			photonMapPass(++it, queue, job, film, sceneResID,
 					sensorResID, samplerResID);
             for (int i = 0; i < 3 ; i++) {
                 ostringstream oss;
                 oss << "Photon/Ray " << i << " from " << id;
                 string objStr = oss.str();
-                string recipient = getRandomRecipient();
-                sendMessage(&communicationSocket, objStr, recipient);
+                /*string recipient = getRandomRecipient();
+                sendMessage(&communicationSocket, objStr, recipient);*/
             }
 		}
 
@@ -364,7 +365,7 @@ public:
 		return true;
 	}
 
-	void distributedRTPass(Scene *scene, std::vector<SerializableObject *> &samplers) {
+	void distributedRTPass(Scene *scene, std::vector<SerializableObject *> &samplers, zmq::socket_t * socket) {
 		ref<Sensor> sensor = scene->getSensor();
 		bool needsApertureSample = sensor->needsApertureSample();
 		bool needsTimeSample = sensor->needsTimeSample();
@@ -406,7 +407,9 @@ public:
 					sample = sampler->next2D();
 					sample += Vector2((Float) gatherPoint.pos.x, (Float) gatherPoint.pos.y);
 					RayDifferential ray;
-					sensor->sampleRayDifferential(ray, sample, apertureSample, timeSample);
+					//cout << "Before: " << ray.toString() << endl;
+                    sensor->sampleRayDifferential(ray, sample, apertureSample, timeSample);
+                    //cout << ray.toString() << endl;
 					Spectrum weight(1.0f);
 					int depth = 1;
 					gatherPoint.emission = Spectrum(0.0f);
@@ -417,44 +420,46 @@ public:
 							const BSDF *bsdf = gatherPoint.its.getBSDF();
 
                             // TODO: CHECK IF PORTAIL?
-                            /*
-                                //cout << "Shape: " << gatherPoint.its.getBSDF()->getID() << endl;
-                                if(gatherPoint.its.getBSDF()->getID().compare("portail_ChunkXX")){
-                                    // send ray to chunk
-                                }
+                            string bsdfID = bsdf->getID();
+                            string isPortail = bsdfID.substr(0, bsdfID.find("-"));
+                            if(isPortail.compare("portail") == 0){
+                                string portailDirection = bsdfID.substr(bsdfID.find("-")+1, bsdfID.size());
+                                gatherPoint.dest = portailDirection;
+                                cout << "Portail found" << endl;
+                            }else{
+                                gatherPoint.dest = "server";
 
-                            */
+    							if (gatherPoint.its.isEmitter())
+    								gatherPoint.emission += weight * gatherPoint.its.Le(-ray.d);
 
-							if (gatherPoint.its.isEmitter())
-								gatherPoint.emission += weight * gatherPoint.its.Le(-ray.d);
+    							if (depth >= m_maxDepth && m_maxDepth != -1) {
+    								gatherPoint.depth = -1;
+    								break;
+    							}
 
-							if (depth >= m_maxDepth && m_maxDepth != -1) {
-								gatherPoint.depth = -1;
-								break;
-							}
-
-							/* Create hit point if this is a diffuse material or a glossy
-							   one, and there has been a previous interaction with
-							   a glossy material */
-							if ((bsdf->getType() & BSDF::EAll) == BSDF::EDiffuseReflection ||
-								(bsdf->getType() & BSDF::EAll) == BSDF::EDiffuseTransmission ||
-								(depth + 1 > m_maxDepth && m_maxDepth != -1)) {
-								gatherPoint.weight = weight;
-								gatherPoint.depth = depth;
-								break;
-							} else {
-								/* Recurse for dielectric materials and (specific to SPPM):
-								   recursive "final gathering" for glossy materials */
-								BSDFSamplingRecord bRec(gatherPoint.its, sampler);
-								weight *= bsdf->sample(bRec, sampler->next2D());
-								if (weight.isZero()) {
-									gatherPoint.depth = -1;
-									break;
-								}
-								ray = RayDifferential(gatherPoint.its.p,
-									gatherPoint.its.toWorld(bRec.wo), ray.time);
-								++depth;
-							}
+    							/* Create hit point if this is a diffuse material or a glossy
+    							   one, and there has been a previous interaction with
+    							   a glossy material */
+    							if ((bsdf->getType() & BSDF::EAll) == BSDF::EDiffuseReflection ||
+    								(bsdf->getType() & BSDF::EAll) == BSDF::EDiffuseTransmission ||
+    								(depth + 1 > m_maxDepth && m_maxDepth != -1)) {
+    								gatherPoint.weight = weight;
+    								gatherPoint.depth = depth;
+    								break;
+    							} else {
+    								/* Recurse for dielectric materials and (specific to SPPM):
+    								   recursive "final gathering" for glossy materials */
+    								BSDFSamplingRecord bRec(gatherPoint.its, sampler);
+    								weight *= bsdf->sample(bRec, sampler->next2D());
+    								if (weight.isZero()) {
+    									gatherPoint.depth = -1;
+    									break;
+    								}
+    								ray = RayDifferential(gatherPoint.its.p,
+    									gatherPoint.its.toWorld(bRec.wo), ray.time);
+    								++depth;
+    							}
+                            }
 						} else {
 							/* Generate an invalid sample */
 							gatherPoint.depth = -1;
@@ -466,6 +471,21 @@ public:
 				}
 			}
 		}
+
+        for (int i=0; i<(int) m_gatherBlocks.size(); ++i) {
+			std::vector<GatherPoint> &gatherPoints = m_gatherBlocks[i];
+            for(int j=0; j<(int)gatherPoints.size(); j++){
+                GatherPoint gp = gatherPoints[j];
+                if(gp.depth != -1){
+                    //cout << "GP: " << gp.dest << endl;
+                    /*stringstream ofs;
+                    boost::archive::text_oarchive oa(ofs);
+                    // write class instance to archive
+                    oa << gp;
+                    sendMessage(socket, oa.str(), gp.dest);*/
+                }
+            }
+        }
 	}
 
 	void photonMapPass(int it, RenderQueue *queue, const RenderJob *job,
@@ -499,7 +519,10 @@ public:
 		#if defined(MTS_OPENMP)
 			#pragma omp parallel for schedule(dynamic)
 		#endif
-		for (int blockIdx = 0; blockIdx<(int) m_gatherBlocks.size(); ++blockIdx) {
+
+        // Travail du serveur?
+
+        for (int blockIdx = 0; blockIdx<(int) m_gatherBlocks.size(); ++blockIdx) {
 			std::vector<GatherPoint> &gatherPoints = m_gatherBlocks[blockIdx];
 
 			Spectrum *target = (Spectrum *) m_bitmap->getUInt8Data();
