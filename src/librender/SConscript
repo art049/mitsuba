@@ -13,10 +13,11 @@ librender = renderEnv.SharedLibrary('mitsuba-render', [
 	'bsdf.cpp', 'film.cpp', 'integrator.cpp', 'emitter.cpp', 'sensor.cpp',
 	'skdtree.cpp', 'medium.cpp', 'renderjob.cpp', 'imageproc.cpp',
 	'rectwu.cpp', 'renderproc.cpp', 'imageblock.cpp', 'particleproc.cpp',
+	'dosppmparticleproc.cpp',
 	'renderqueue.cpp', 'scene.cpp',  'subsurface.cpp', 'texture.cpp',
 	'shape.cpp', 'trimesh.cpp', 'sampler.cpp', 'util.cpp', 'irrcache.cpp',
-	'testcase.cpp', 'photonmap.cpp', 'gatherproc.cpp', 'volume.cpp',
-	'vpl.cpp', 'shader.cpp', 'scenehandler.cpp', 'intersection.cpp',
+	'testcase.cpp', 'photonmap.cpp', 'gatherproc.cpp', 'dosppmgatherproc.cpp',
+	'volume.cpp', 'vpl.cpp', 'shader.cpp', 'scenehandler.cpp', 'intersection.cpp',
 	'common.cpp', 'phase.cpp', 'noise.cpp', 'photon.cpp'
 ])
 

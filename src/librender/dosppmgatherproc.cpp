@@ -96,20 +96,20 @@ private:
 /**
  * This class does the actual photon tracing work
  */
-class GatherPhotonWorker : public DOSPPMParticleTracer {
+class DOSPPMGatherPhotonWorker : public DOSPPMParticleTracer {
 public:
-	GatherPhotonWorker(GatherPhotonProcess::EGatherType type, size_t granularity,
+	DOSPPMGatherPhotonWorker(DOSPPMGatherPhotonProcess::EGatherType type, size_t granularity,
 		int maxDepth, int rrDepth) : DOSPPMParticleTracer(maxDepth, rrDepth, false),
 		m_type(type), m_granularity(granularity) { }
 
-	GatherPhotonWorker(Stream *stream, InstanceManager *manager)
+	DOSPPMGatherPhotonWorker(Stream *stream, InstanceManager *manager)
 	 : DOSPPMParticleTracer(stream, manager) {
-		m_type = (GatherPhotonProcess::EGatherType) stream->readInt();
+		m_type = (DOSPPMGatherPhotonProcess::EGatherType) stream->readInt();
 		m_granularity = stream->readSize();
 	}
 
 	ref<WorkProcessor> clone() const {
-		return new GatherPhotonWorker(m_type, m_granularity, m_maxDepth,
+		return new DOSPPMGatherPhotonWorker(m_type, m_granularity, m_maxDepth,
 			m_rrDepth);
 	}
 
@@ -143,16 +143,16 @@ public:
 		if (!(bsdfType & BSDF::EDiffuseReflection) && !(bsdfType & BSDF::EGlossyReflection))
 			return;
 
-		if ((m_type == GatherPhotonProcess::ECausticPhotons && depth > 1 && delta)
-		 || (m_type == GatherPhotonProcess::ESurfacePhotons && depth > 1 && !delta)
-		 || (m_type == GatherPhotonProcess::EAllSurfacePhotons))
+		if ((m_type == DOSPPMGatherPhotonProcess::ECausticPhotons && depth > 1 && delta)
+		 || (m_type == DOSPPMGatherPhotonProcess::ESurfacePhotons && depth > 1 && !delta)
+		 || (m_type == DOSPPMGatherPhotonProcess::EAllSurfacePhotons))
 			m_workResult->put(Photon(its.p, its.geoFrame.n, -its.toWorld(its.wi), weight, depth));
 	}
 
 	void handleMediumInteraction(int depth, int nullInteractions, bool delta,
 			const MediumSamplingRecord &mRec, const Medium *medium,
 			const Vector &wi, const Spectrum &weight) {
-		if (m_type == GatherPhotonProcess::EVolumePhotons)
+		if (m_type == DOSPPMGatherPhotonProcess::EVolumePhotons)
 			m_workResult->put(Photon(mRec.p, Normal(0.0f, 0.0f, 0.0f),
 				-wi, weight, depth-nullInteractions));
 	}
@@ -160,31 +160,31 @@ public:
 	MTS_DECLARE_CLASS()
 protected:
 	/// Virtual destructor
-	virtual ~GatherPhotonWorker() { }
+	virtual ~DOSPPMGatherPhotonWorker() { }
 protected:
-	GatherPhotonProcess::EGatherType m_type;
+	DOSPPMGatherPhotonProcess::EGatherType m_type;
 	size_t m_granularity;
 	ref<PhotonVector> m_workResult;
 };
 
-GatherPhotonProcess::GatherPhotonProcess(EGatherType type, size_t photonCount,
+DOSPPMGatherPhotonProcess::DOSPPMGatherPhotonProcess(EGatherType type, size_t photonCount,
 	size_t granularity, int maxDepth, int rrDepth, bool isLocal, bool autoCancel,
 	const void *progressReporterPayload)
-	: ParticleProcess(ParticleProcess::EGather, photonCount, granularity, "Gathering photons",
+	: DOSPPMParticleProcess(DOSPPMParticleProcess::EGather, photonCount, granularity, "Gathering photons",
 	  progressReporterPayload), m_type(type), m_photonCount(photonCount), m_maxDepth(maxDepth),
 	  m_rrDepth(rrDepth),  m_isLocal(isLocal), m_autoCancel(autoCancel), m_excess(0), m_numShot(0) {
 	m_photonMap = new PhotonMap(photonCount);
 }
 
-bool GatherPhotonProcess::isLocal() const {
+bool DOSPPMGatherPhotonProcess::isLocal() const {
 	return m_isLocal;
 }
 
-ref<WorkProcessor> GatherPhotonProcess::createWorkProcessor() const {
-	return new GatherPhotonWorker(m_type, m_granularity, m_maxDepth, m_rrDepth);
+ref<WorkProcessor> DOSPPMGatherPhotonProcess::createWorkProcessor() const {
+	return new DOSPPMGatherPhotonWorker(m_type, m_granularity, m_maxDepth, m_rrDepth);
 }
 
-void GatherPhotonProcess::processResult(const WorkResult *wr, bool cancelled) {
+void DOSPPMGatherPhotonProcess::processResult(const WorkResult *wr, bool cancelled) {
 	if (cancelled)
 		return;
 	const PhotonVector &vec = *static_cast<const PhotonVector *>(wr);
@@ -210,7 +210,7 @@ void GatherPhotonProcess::processResult(const WorkResult *wr, bool cancelled) {
 	increaseResultCount(vec.size());
 }
 
-ParallelProcess::EStatus GatherPhotonProcess::generateWork(WorkUnit *unit, int worker) {
+ParallelProcess::EStatus DOSPPMGatherPhotonProcess::generateWork(WorkUnit *unit, int worker) {
 	/* Use the same approach as PBRT for auto canceling */
 	LockGuard lock(m_resultMutex);
 	if (m_autoCancel && m_numShot > 100000
@@ -219,10 +219,9 @@ ParallelProcess::EStatus GatherPhotonProcess::generateWork(WorkUnit *unit, int w
 		return EFailure;
 	}
 
-	return ParticleProcess::generateWork(unit, worker);
+	return DOSPPMParticleProcess::generateWork(unit, worker);
 }
 
-MTS_IMPLEMENT_CLASS(GatherPhotonProcess, false, ParticleProcess)
-MTS_IMPLEMENT_CLASS_S(GatherPhotonWorker, false, DOSPPMParticleTracer)
-MTS_IMPLEMENT_CLASS(PhotonVector, false, WorkResult)
+MTS_IMPLEMENT_CLASS(DOSPPMGatherPhotonProcess, false, DOSPPMParticleProcess)
+MTS_IMPLEMENT_CLASS_S(DOSPPMGatherPhotonWorker, false, DOSPPMParticleTracer)
 MTS_NAMESPACE_END

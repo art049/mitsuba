@@ -266,7 +266,8 @@ void DOSPPMParticleTracer::process(const WorkUnit *workUnit, WorkResult *workRes
 }
 
 void DOSPPMParticleTracer::handleEmission(const PositionSamplingRecord &pRec,
-		const Medium *medium, const Spectrum &weight) { }
+		const Medium *medium, const Spectrum &weight) {
+		cout << "Emission" << endl; }
 
 void DOSPPMParticleTracer::handleNewParticle() { }
 
@@ -278,7 +279,6 @@ void DOSPPMParticleTracer::handleMediumInteraction(int depth, int nullInteractio
 	bool delta, const MediumSamplingRecord &mRec, const Medium *medium,
 	const Vector &wi, const Spectrum &weight) { }
 
-MTS_IMPLEMENT_CLASS(RangeWorkUnit, false, WorkUnit)
 MTS_IMPLEMENT_CLASS(DOSPPMParticleProcess, true, ParallelProcess)
 MTS_IMPLEMENT_CLASS(DOSPPMParticleTracer, true, WorkProcessor)
 MTS_NAMESPACE_END
