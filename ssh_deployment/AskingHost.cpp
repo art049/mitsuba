@@ -91,5 +91,6 @@ void AskingHost::testAvailableComputer(const char * telNet, const char * c)
       }
       close(stdOutput[0]);
       close(errOutput[0]);
+      exit(1);
   }
 }
