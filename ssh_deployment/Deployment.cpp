@@ -14,10 +14,12 @@ bool DEBUG = true;
 void startup(const char *);
 void rmAvailableFile(string);
 void launchRouter(string, string, string , int);
+void copyScriptAddress(string);
 
 string executeScript(string script);
 string scriptName = "getAddress.sh";
 string pathToRouter = "./mitsuba-dosppm/client_server_test/router";
+string destAddressScript = "/cal/homes/vbisogno/";
 
 using namespace std;
 
@@ -42,6 +44,8 @@ int main(int argc, char * argv[])
   /* asking via ssh through all the network which machines are available. */
   startup(telecomNetwork);
   printf("All child processes finished.\n");
+  /* Copying of the script getAdress.sh for the router to work properly. */
+  copyScriptAddress(telecomNetwork);
   /* All available computers are now in the AvailableComputers file.
   ** We can now launch router.
   */
@@ -118,7 +122,7 @@ void launchRouter(string telecomNetwork, string machine, string serverAddress, i
   }
 }
 
-string executeScript(string script){
+string executeScript(string script) {
     FILE *lsofFile_p = popen(script.c_str(), "r");
 
     if (!lsofFile_p)
@@ -130,4 +134,22 @@ string executeScript(string script){
     char *line_p = fgets(buffer, sizeof(buffer), lsofFile_p);
     pclose(lsofFile_p);
     return string(line_p);
+}
+
+void copyScriptAddress(string telecomNetwork) {
+  pid_t pid = fork();
+  string cmd = "";
+  switch (pid) {
+      case -1: /* Error */
+          cerr << "Uh-Oh! fork() failed.\n";
+          exit(1);
+      case 0: /* Child process */
+          cmd = string("scp ") + "./" + scriptName + " " + telecomNetwork + ":" + destAddressScript;
+          char buffer[64];
+          sprintf(buffer, "%.64s", cmd.c_str());
+          execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
+          exit(1);
+      default:
+        wait(NULL);
+  }
 }
