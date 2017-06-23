@@ -288,8 +288,10 @@ public:
         if (i_chunks.size() > 1) {
             for (unsigned int i = 0; i < i_chunks.size(); i++) {
                 TAABB<Point3i> bb1 = TAABB<Point3i>(i_chunks.at(i).min, i_chunks.at(i).max);
+
                 for (unsigned int j = i + 1; j < i_chunks.size(); j++) {
                     TAABB<Point3i> bb2 = TAABB<Point3i>(i_chunks.at(j).min, i_chunks.at(j).max);
+
                     if (bb1.overlaps(bb2)) {
                         TAABB<Point3i> overlap = bb1;
                         overlap.clip(bb2);
@@ -300,7 +302,7 @@ public:
                         new_portal.max = overlap.max;
                         new_portal.cut_axis = cut_axis;
 
-                        // Determine which chunks comes first on the cut axis
+                        // Determine which chunk comes first on the cut axis
                         if (i_chunks.at(i).min[cut_axis] <= i_chunks.at(j).min[cut_axis]) {
                             new_portal.chunk1 = i;
                             new_portal.chunk2 = j;
@@ -420,9 +422,25 @@ public:
 		std::ofstream subscene(scenePath.str().c_str());
 		subscene << sceneTemplate.rdbuf();
 
-        // Add portals
-        for (std::vector<Portal>::iterator it = portals.begin(); it != portals.end(); it++)
-                cout << *it;
+        // Add portals to the subscene
+        for (std::vector<Portal>::iterator it = portals.begin(); it != portals.end(); it++) {
+            int destination = -1;
+
+            if (it->chunk1 == chunkNb)
+                destination = it->chunk2;
+            else if (it->chunk2 == chunkNb)
+                destination = it->chunk1;
+            else
+                continue;
+
+            subscene 	<< "\t<shape type=\"rectangle\" >\n"
+						<< "\t\t<transform name=\"toWorld\" >\n"
+						<< "\t\t\t<matrix value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\" />\n"
+						<< "\t\t</transform>\n"
+						<< "\t\t<ref id=\"DOSPPM_PortalTo_" << destination << "\" />\n"
+						<< "\t</shape>" << endl;
+            cout << "Portal added to subscene: " << *it << endl;
+        }
 
 		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
 
