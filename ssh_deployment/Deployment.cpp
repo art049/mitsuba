@@ -210,8 +210,6 @@ void launchRouter(string telecomNetwork, string machine, string serverAddress, i
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
           cerr << "Launching router failed. Exiting ..." << endl;
           exit(1);
-      default:
-        wait(NULL);
   }
 }
 
