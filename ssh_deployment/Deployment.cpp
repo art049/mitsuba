@@ -9,17 +9,25 @@
 #include <algorithm>
 #include "AskingHost.h"
 
-string FILENAME = "AvailableComputers";
-bool DEBUG = true;
 void startup(const char *);
 void rmAvailableFile(string);
 void launchRouter(string, string, string , int);
+void launchClient(string, string, int);
 void copyScriptAddress(string);
-
+void copySubscene(string, string, int);
+void rmPreviousSubscene(string, string, int);
 string executeScript(string script);
+
+/* Global variables */
+string FILENAME = "AvailableComputers";
+bool DEBUG = true;
 string scriptName = "getAddress.sh";
-string pathToRouter = "./mitsuba-dosppm/client_server_test/router";
+string pathToRouter = "/cal/homes/vbisogno/mitsuba-dosppm/client_server_test/router";
+string pathToClient = "/cal/homes/vbisogno/mitsuba-dosppm/client_server_test/client";
+string pathToSubsceneInClient = "/tmp/subscene/";
+string pathToSubsceneInServer = "~/mitsuba-dosppm/subscene/";
 string destAddressScript = "/cal/homes/vbisogno/";
+string name = "vbisogno@";
 
 using namespace std;
 
@@ -31,7 +39,7 @@ int main(int argc, char * argv[])
 	if(argc != 3){
 	    cout << "ERROR: please pass your ssh id as an argument: telecom_login@ssh.enst.fr as well as the number of clients" << endl;
 	    return -1;
-	}else{
+	} else {
 	    telecomNetwork = argv[1];
       nbClients = atoi(argv[2]); //Char * to int.
 	    cout << "TelNet: " << telecomNetwork << endl;
@@ -58,6 +66,18 @@ int main(int argc, char * argv[])
   /* Launch router on 'machine'. We give serverAddress and nbClients as requested by the router process. */
   launchRouter(telecomNetwork, machine, serverAddress, nbClients);
 
+  for (int i = 0 ; i < nbClients ; i++) {
+    /* copy of subscene_i on client_i. */
+    if (!f.eof()) {
+      f >> machine;
+      rmPreviousSubscene(telecomNetwork, machine, i);
+      cout << "Copying sub" << i << " on computer: " << machine << endl;
+      copySubscene(telecomNetwork, machine, i);
+      /* We can then launch client who needs subscene_i to work properly. */
+      cout << "Launching client num: " << i << " on computer: " << machine << endl;
+      launchClient(telecomNetwork, machine, i);
+    }
+  }
 }
 
 void rmAvailableFile(string file) {
@@ -79,6 +99,25 @@ void rmAvailableFile(string file) {
   }
 }
 
+void rmPreviousSubscene(string telecomNetwork, string machine, int numClient) {
+  string cmd = "";
+  pid_t pid = fork();
+  switch (pid) {
+    case -1: //Error
+      cerr << "Uh-Oh! fork() failed.\n";
+      exit(1);
+    case 0: //Child process
+      cmd = "ssh " + telecomNetwork + " ssh " + machine + " rm -f -r " + pathToSubsceneInClient;
+      char buffer[256];
+      sprintf(buffer, "%.256s", cmd.c_str());
+      execlp("bash", "bash", "-c", buffer, (char *)NULL);
+      cerr << "Exec failed!" << endl;
+      exit(1);
+    default: //Parent process
+      wait(NULL);
+  }
+}
+
 void startup(const char * telecomNetwork)
 {
   ifstream f("deploy");
@@ -92,7 +131,7 @@ void startup(const char * telecomNetwork)
     pid_t pid = fork(); /* Create a child process */
     switch (pid) {
         case -1: /* Error */
-            cerr << "Uh-Oh! fork() failed.\n";
+            cerr << "fork() failed.\n";
             exit(1);
         case 0: /* Child process */
             ask->testAvailableComputer(telecomNetwork, computer);  /* Execute the program */
@@ -101,25 +140,6 @@ void startup(const char * telecomNetwork)
     }
   }
   while ((wait_pid = wait(&status)) > 0);
-}
-
-void launchRouter(string telecomNetwork, string machine, string serverAddress, int nbClients)
-{
-  pid_t pid = fork();
-  string cmd = "";
-  switch (pid) {
-      case -1: /* Error */
-          cerr << "Uh-Oh! fork() failed.\n";
-          exit(1);
-      case 0: /* Child process */
-          cmd = "ssh " + telecomNetwork + " ssh " + machine + " " + pathToRouter + " " + serverAddress + " " + to_string(nbClients);
-          char buffer[128];
-          sprintf(buffer, "%.128s", cmd.c_str());
-          execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
-          exit(1);
-      default:
-        wait(NULL);
-  }
 }
 
 string executeScript(string script) {
@@ -141,15 +161,73 @@ void copyScriptAddress(string telecomNetwork) {
   string cmd = "";
   switch (pid) {
       case -1: /* Error */
-          cerr << "Uh-Oh! fork() failed.\n";
+          cerr << "fork() failed.\n";
           exit(1);
       case 0: /* Child process */
           cmd = string("scp ") + "./" + scriptName + " " + telecomNetwork + ":" + destAddressScript;
           char buffer[64];
           sprintf(buffer, "%.64s", cmd.c_str());
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
+          cerr << "Copy of the getAdress script file failed. Exiting ..." << endl;
           exit(1);
       default:
         wait(NULL);
+  }
+}
+
+void copySubscene(string telecomNetwork, string machine, int numClient) {
+  pid_t pid = fork();
+  string cmd = "";
+  switch (pid) {
+      case -1: /* Error */
+          cerr << "fork() failed.\n";
+          exit(1);
+      case 0: /* Child process */
+          cmd = string("scp -r -o ProxyCommand=\"ssh ") + telecomNetwork + " nc %h %p\" -o StrictHostKeyChecking=no " + pathToSubsceneInServer + "sub" +
+          to_string(numClient) + " " + name + machine + ":/tmp/subscene/";
+          char buffer[256];
+          sprintf(buffer, "%.256s", cmd.c_str());
+          execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
+          cerr << "Copy of the subscene folder failed. Exiting ..." << endl;
+          exit(1);
+      default:
+        wait(NULL);
+  }
+}
+
+void launchRouter(string telecomNetwork, string machine, string serverAddress, int nbClients)
+{
+  pid_t pid = fork();
+  string cmd = "";
+  switch (pid) {
+      case -1: /* Error */
+          cerr << "fork() failed.\n";
+          exit(1);
+      case 0: /* Child process */
+          cmd = "xterm -e ssh " + telecomNetwork + " ssh " + machine + " " + pathToRouter + " " + serverAddress + " " + to_string(nbClients);
+          char buffer[128];
+          sprintf(buffer, "%.128s", cmd.c_str());
+          execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
+          cerr << "Launching router failed. Exiting ..." << endl;
+          exit(1);
+      default:
+        wait(NULL);
+  }
+}
+
+void launchClient(string telecomNetwork, string machine, int numClient) {
+  pid_t pid = fork();
+  string cmd = "";
+  switch (pid) {
+      case -1: /* Error */
+          cerr << "fork() failed.\n";
+          exit(1);
+      case 0: /* Child process */
+          cmd = "xterm -e ssh " + telecomNetwork + " ssh " + machine + " " + pathToClient + " " + pathToSubsceneInClient + "scene.xml";
+          char buffer[256];
+          sprintf(buffer, "%.256s", cmd.c_str());
+          execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
+          cerr << "Launching client failed. Exiting ..." << endl;
+          exit(1);
   }
 }
