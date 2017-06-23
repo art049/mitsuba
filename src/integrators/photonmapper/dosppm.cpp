@@ -108,7 +108,7 @@ MTS_NAMESPACE_BEGIN
  		 o << "Axis " << p.cut_axis << endl
            << "Coords " << p.min[0] << " " << p.min[1] << " " << p.min[2] << " ; "
            << p.max[0] << " " << p.max[1] << " " << p.max[2] << endl
-           << "Chunks " << p.chunk1 << " | " << p.chunk2 << endl;
+           << "Chunks " << p.chunk1 << " | " << p.chunk2;
 
  		 return o;
  	}
@@ -265,10 +265,9 @@ public:
 
 
 		// BUILD CHUNKS
-		int split_depth = 3;
+		int split_depth = 2;
 		std::vector<iAABB> i_chunks;
 		std::pair<iAABB, iAABB> cur_chunks;
-        std::vector<Portal> portals;
 
 		i_chunks.push_back(iAABB(Point3i(0,0,0), n_cell));
 		cout << endl;
@@ -279,43 +278,42 @@ public:
 				cur_chunks = split_in_chunks(poly_count, &i_chunks[i], n_cell, split_axis);
 				tmp_chunks.push_back(cur_chunks.first);
 				tmp_chunks.push_back(cur_chunks.second);
-
-                Portal new_portal;
-                new_portal.min = cur_chunks.second.min;
-                new_portal.max = cur_chunks.first.max;
-                new_portal.cut_axis = split_axis;
-                //new_portal.chunk1 = cur_chunks.first;
-                //new_portal.chunk2 = cur_chunks.second;
-                std::vector<Portal> half_portals;
-                for (std::vector<Portal>::iterator it = portals.begin(); it != portals.end(); it++) {
-                    int old_axis = it->cut_axis;
-                    int new_axis = new_portal.cut_axis;
-
-                    // Split previous portals that overlap on one edge
-                    if (old_axis != new_axis) {
-                        if (new_portal.min[old_axis] == it->min[old_axis]
-                         && new_portal.min[new_axis] < it->max[new_axis]
-                         && new_portal.min[new_axis] > it->min[new_axis]) {
-                            Portal second_half = *it;
-                            second_half.min[new_axis] = new_portal.min[new_axis];
-                            it->max[new_axis] = new_portal.min[new_axis];
-                            half_portals.push_back(second_half);
-                        } else if (new_portal.max[old_axis] == it->min[old_axis]
-                         && new_portal.max[new_axis] < it->max[new_axis]
-                         && new_portal.max[new_axis] > it->min[new_axis]) {
-                            Portal second_half = *it;
-                            second_half.min[new_axis] = new_portal.max[new_axis];
-                            it->max[new_axis] = new_portal.max[new_axis];
-                            half_portals.push_back(second_half);
-                        }
-                    };
-                }
-                portals.insert(portals.end(), half_portals.begin(), half_portals.end());
-                portals.push_back(new_portal);
 			}
 			i_chunks = tmp_chunks;
 		}
 		cout << endl;
+
+        // Add portals
+        std::vector<Portal> portals;
+        if (i_chunks.size() > 1) {
+            for (unsigned int i = 0; i < i_chunks.size(); i++) {
+                TAABB<Point3i> bb1 = TAABB<Point3i>(i_chunks.at(i).min, i_chunks.at(i).max);
+                for (unsigned int j = i + 1; j < i_chunks.size(); j++) {
+                    TAABB<Point3i> bb2 = TAABB<Point3i>(i_chunks.at(j).min, i_chunks.at(j).max);
+                    if (bb1.overlaps(bb2)) {
+                        TAABB<Point3i> overlap = bb1;
+                        overlap.clip(bb2);
+                        int cut_axis = overlap.getShortestAxis();
+                        Portal new_portal;
+
+                        new_portal.min = overlap.min;
+                        new_portal.max = overlap.max;
+                        new_portal.cut_axis = cut_axis;
+
+                        // Determine which chunks comes first on the cut axis
+                        if (i_chunks.at(i).min[cut_axis] <= i_chunks.at(j).min[cut_axis]) {
+                            new_portal.chunk1 = i;
+                            new_portal.chunk2 = j;
+                        } else {
+                            new_portal.chunk1 = j;
+                            new_portal.chunk2 = i;
+                        }
+
+                        portals.push_back(new_portal);
+                    }
+                }
+            }
+        }
 
         // Convert chunks from iAABBs to AABBs
 		std::vector<AABB> chunks;
