@@ -76,7 +76,7 @@ MTS_NAMESPACE_BEGIN
  *    models.
  * }
  */
-//TODO: Move this struc into a header
+//TODO: Move these structs into a header
  class iAABB {
  public:
  	Point3i min;
@@ -94,6 +94,22 @@ MTS_NAMESPACE_BEGIN
  	friend std::ostream& operator << ( std::ostream& o, const iAABB& e ) {
  		 o << "min: " << e.min[0] << " " << e.min[1] << " " <<e.min[2]
 		   <<", max: " << e.max[0] << " " << e.max[1] << " " <<e.max[2];
+ 		 return o;
+ 	}
+ };
+ struct Portal {
+    Point3i min;
+    Point3i max;
+    int cut_axis;
+    int chunk1;
+    int chunk2;
+
+    friend std::ostream& operator << (std::ostream& o, const Portal& p) {
+ 		 o << "Axis " << p.cut_axis << endl
+           << "Coords " << p.min[0] << " " << p.min[1] << " " << p.min[2] << " ; "
+           << p.max[0] << " " << p.max[1] << " " << p.max[2] << endl
+           << "Chunks " << p.chunk1 << " | " << p.chunk2 << endl;
+
  		 return o;
  	}
  };
@@ -165,7 +181,7 @@ public:
 		return n_poly;
 	}
 
-	std::pair<iAABB, iAABB> split_in_chunks(std::vector<unsigned int> poly_count, iAABB * parent, Point3i n_cell, int* split_axis){
+	std::pair<iAABB, iAABB> split_in_chunks(std::vector<unsigned int> poly_count, iAABB * parent, Point3i n_cell, int& split_axis){
 		Point3i min(parent->min), max(parent->max);
 		unsigned int parent_poly_count = sum_poly(poly_count, min, max, n_cell);
 		int min_axis = -1, min_i = -1;
@@ -188,7 +204,7 @@ public:
 		}
 		Point3i min_offset_vector(0,0,0);
 		min_offset_vector[min_axis] = 1;
-        *split_axis = min_axis;
+        split_axis = min_axis;
 		return std::make_pair(iAABB(min, Point3i(max - min_offset_vector * (max[min_axis] - min_i - 1))),
 		                 iAABB(Point3i(min + min_offset_vector * (min_i+1)), max));
 	}
@@ -252,30 +268,52 @@ public:
 		int split_depth = 3;
 		std::vector<iAABB> i_chunks;
 		std::pair<iAABB, iAABB> cur_chunks;
-        std::vector< std::vector<int> > neighborhood;
-        std::vector<int> empty_nbd(6, 0);
-        neighborhood.push_back(empty_nbd);
+        std::vector<Portal> portals;
 
 		i_chunks.push_back(iAABB(Point3i(0,0,0), n_cell));
 		cout << endl;
 		for(int depth = 0; depth < split_depth; depth++){
 			std::vector<iAABB> tmp_chunks;
-            std::vector< std::vector<int> > tmp_neighborhood;
 			for(unsigned int i = 0; i < i_chunks.size(); i++){
-                std::vector<int> nbd1(neighborhood.at(i)), nbd2(neighborhood.at(i));
                 int split_axis;
-				cur_chunks = split_in_chunks(poly_count, &i_chunks[i], n_cell, &split_axis);
+				cur_chunks = split_in_chunks(poly_count, &i_chunks[i], n_cell, split_axis);
 				tmp_chunks.push_back(cur_chunks.first);
 				tmp_chunks.push_back(cur_chunks.second);
 
-                // Neighborhood construction
-                nbd1.at(split_axis) = 2 * i;
-                nbd2.at(split_axis + 3) = 2 * i + 1;
-                tmp_neighborhood.push_back(nbd1);
-                tmp_neighborhood.push_back(nbd2);
+                Portal new_portal;
+                new_portal.min = cur_chunks.second.min;
+                new_portal.max = cur_chunks.first.max;
+                new_portal.cut_axis = split_axis;
+                //new_portal.chunk1 = cur_chunks.first;
+                //new_portal.chunk2 = cur_chunks.second;
+                std::vector<Portal> half_portals;
+                for (std::vector<Portal>::iterator it = portals.begin(); it != portals.end(); it++) {
+                    int old_axis = it->cut_axis;
+                    int new_axis = new_portal.cut_axis;
+
+                    // Split previous portals that overlap on one edge
+                    if (old_axis != new_axis) {
+                        if (new_portal.min[old_axis] == it->min[old_axis]
+                         && new_portal.min[new_axis] < it->max[new_axis]
+                         && new_portal.min[new_axis] > it->min[new_axis]) {
+                            Portal second_half = *it;
+                            second_half.min[new_axis] = new_portal.min[new_axis];
+                            it->max[new_axis] = new_portal.min[new_axis];
+                            half_portals.push_back(second_half);
+                        } else if (new_portal.max[old_axis] == it->min[old_axis]
+                         && new_portal.max[new_axis] < it->max[new_axis]
+                         && new_portal.max[new_axis] > it->min[new_axis]) {
+                            Portal second_half = *it;
+                            second_half.min[new_axis] = new_portal.max[new_axis];
+                            it->max[new_axis] = new_portal.max[new_axis];
+                            half_portals.push_back(second_half);
+                        }
+                    };
+                }
+                portals.insert(portals.end(), half_portals.begin(), half_portals.end());
+                portals.push_back(new_portal);
 			}
 			i_chunks = tmp_chunks;
-            neighborhood = tmp_neighborhood;
 		}
 		cout << endl;
 
@@ -294,7 +332,7 @@ public:
 		cout << "SUBSCENE CREATION" << endl;
 		createSubSceneTemplate(scene);
 		for(unsigned int i = 0; i < chunks.size(); i++){
-			createSubScene(scene, meshes, chunks[i], i);
+			createSubScene(scene, meshes, chunks[i], i, portals);
 		}
 		cout << endl;
 	}
@@ -358,7 +396,7 @@ public:
 
 	}
 
-	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, AABB chunk, int chunkNb){
+	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, AABB chunk, int chunkNb, std::vector<Portal> portals){
 
 		// Create directory for this subscene
 		std::string folderPath("");
@@ -385,7 +423,8 @@ public:
 		subscene << sceneTemplate.rdbuf();
 
         // Add portals
-        cout << chunkNb << endl;
+        for (std::vector<Portal>::iterator it = portals.begin(); it != portals.end(); it++)
+                cout << *it;
 
 		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
 
