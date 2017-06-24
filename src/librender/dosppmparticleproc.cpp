@@ -163,6 +163,8 @@ void DOSPPMParticleTracer::process(const WorkUnit *workUnit, WorkResult *workRes
 		Spectrum throughput(1.0f); // unitless path throughput (used for russian roulette)
 		while (!throughput.isZero() && (depth <= m_maxDepth || m_maxDepth < 0)) {
 			m_scene->rayIntersectAll(ray, its);
+			//Portal check
+			cout << "Intersected mesh : " << its.shape->getName() << endl;
 
             /* ==================================================================== */
             /*                 Radiative Transfer Equation sampling                 */
