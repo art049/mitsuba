@@ -131,13 +131,12 @@ void DOSPPMParticleTracer::process(const WorkUnit *workUnit, WorkResult *workRes
 		Ray ray;
 
 		if (m_emissionEvents) {
-		
+			//Not used for DOSPPM
 			/* Sample the position and direction component separately to
 			   generate emission events */
 			power = m_scene->sampleEmitterPosition(pRec, m_sampler->next2D());
 			emitter = static_cast<const Emitter *>(pRec.object);
 			medium = emitter->getMedium();
-
 			/* Forward the sampling event to the attached handler */
 			handleEmission(pRec, medium, power);
 
@@ -150,11 +149,12 @@ void DOSPPMParticleTracer::process(const WorkUnit *workUnit, WorkResult *workRes
 		} else {
 			/* Sample both components together, which is potentially
 			   faster / uses a better sampling strategy */
-
+			// Photon injection here
 			power = m_scene->sampleEmitterRay(ray, emitter,
 				m_sampler->next2D(), m_sampler->next2D(), pRec.time);
 			medium = emitter->getMedium();
 			handleNewParticle();
+			cout << ray.toString() << endl;
 		}
 
 		int depth = 1, nullInteractions = 0;
