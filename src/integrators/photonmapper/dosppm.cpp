@@ -435,6 +435,7 @@ public:
                 continue;
 
             subscene 	<< "\t<shape type=\"rectangle\" >\n"
+            << "\t<string name=\"filename\" value=\"DOSPPM_PortalTo_" << destination << "\"/>"
 						<< "\t\t<transform name=\"toWorld\" >\n"
 						<< "\t\t\t<matrix value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\" />\n"
 						<< "\t\t</transform>\n"
