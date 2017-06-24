@@ -16,17 +16,13 @@ void AskingHost::testAvailableComputer(const char * telNet, const char * c)
   int stdOutput[2];
   int errOutput[2];
   char outputForstd[4096];
+
   if (pipe(stdOutput) == -1 || pipe(errOutput) == -1)
   {
     cerr << "Error while openning pipe!" << endl;
     exit(1);
   }
   pid_t pid = fork();
-
-  char buffer[64];
-  sprintf(buffer, "%.64s", fileName.c_str());
-  execlp("pwd", buffer, (char *)NULL);
-  cout << "Pwd: " << buffer << endl;
 
   switch (pid) {
     case -1: //Fork error
@@ -38,12 +34,14 @@ void AskingHost::testAvailableComputer(const char * telNet, const char * c)
       We can then close both pipes.
       And we can execute execlp.
       */
+
       dup2 (stdOutput[1], STDOUT_FILENO);
       dup2 (errOutput[1], STDERR_FILENO);
       close(stdOutput[0]);
       close(errOutput[0]);
       close (stdOutput[1]);
       close (errOutput[1]);
+
       execlp("ssh", "ssh", telecomNetwork, "ssh", "-o StrictHostKeyChecking=no", computer, "hostname", (char*) NULL);
       cerr << "execl() failed!"; /* execl doesn't return unless there's an error */
       exit(1);
@@ -85,10 +83,8 @@ void AskingHost::testAvailableComputer(const char * telNet, const char * c)
           cmd[0] = 'e', cmd[1] = 'c', cmd[2] = 'h', cmd[3] = 'o', cmd[4] = ' ';
           for (int i = 0 ; i < 7 ; i++) cmd[5+i] = computer[i];
           cmd[12] = ' ', cmd[13] = '>', cmd[14] = '>', cmd[15] = ' ';
-          char buffer[64];
-          sprintf(buffer, "%.64s", fileName.c_str());
           unsigned int i = 0;
-          for (; i < fileName.length() ; i++) {cout << buffer[i];cmd[16+i] = buffer[i];}
+          for (; i < fileName.length() ; i++) {cout << fileName[i];cmd[16+i] = fileName[i];}
           execlp("bash", "bash", "-c", cmd, (char *)NULL);
           cerr << "execl() failed!"; /* execl doesn't return unless there's an error */
           exit(1);

@@ -23,12 +23,14 @@ string executeScript(string script);
 /* Global variables */
 string FILENAME = "ssh_deployment/AvailableComputers";
 bool DEBUG = true;
-string scriptName = "src/client_server/getAddress.sh";
+string scriptName = "getAddress.sh";
+string scriptPath = "src/client_server/getAddress.sh";
 string pathToRouter = "src/client_server/router";
 string pathToClient = "binaries/mitsuba";
 string pathToSubsceneInClient = "/tmp/subscene/";
 string pathToSubsceneInServer = "/tmp/subscene/";
-string destAddressScript = "src/client_server/";
+string destAddressScript = "/cal/homes/";
+string deployFile = "ssh_deployment/deploy";
 
 using namespace std;
 
@@ -46,7 +48,7 @@ int main(int argc, char * argv[])
 	    cout << "TelNet: " << telecomNetwork << endl;
       cout << "number of clients to fetch: " << nbClients << endl;
 	}
-  string serverAddress = executeScript("./" + scriptName);
+  string serverAddress = executeScript("./" + scriptPath);
   serverAddress.erase(remove(serverAddress.begin(), serverAddress.end(), '\n'), serverAddress.end());
   /* Let's remove the previous file containing the available machines (machines we can connect to) if it exist. */
   rmAvailableFile(FILENAME);
@@ -54,13 +56,12 @@ int main(int argc, char * argv[])
   startup(telecomNetwork);
   printf("All child processes finished.\n");
   /* Copying of the script getAdress.sh for the router to work properly. */
-  //copyScriptAddress(telecomNetwork);
+  copyScriptAddress(telecomNetwork);
   /* All available computers are now in the AvailableComputers file.
   ** We can now launch router.
   */
   char buffer[64];
   sprintf(buffer, "%.64s", FILENAME.c_str());
-  cout << "Buff: " << buffer << endl;
   ifstream f(buffer);
   string machine;
   f >> machine;
@@ -124,7 +125,7 @@ void rmPreviousSubscene(string telecomNetwork, string machine, int numClient) {
 
 void startup(const char * telecomNetwork)
 {
-  ifstream f("deploy");
+  ifstream f(deployFile);
   char line[8] = {};
   pid_t wait_pid;
   int status;
@@ -163,12 +164,14 @@ string executeScript(string script) {
 void copyScriptAddress(string telecomNetwork) {
   pid_t pid = fork();
   string cmd = "";
+  string userName = "";
   switch (pid) {
       case -1: /* Error */
           cerr << "fork() failed.\n";
           exit(1);
       case 0: /* Child process */
-          cmd = string("scp ") + "./" + scriptName + " " + telecomNetwork + ":" + destAddressScript;
+          userName = telecomNetwork.substr(0, telecomNetwork.find("@"));
+          cmd = string("scp ") + "./" + scriptName + " " + telecomNetwork + ":" + destAddressScript + userName + "/";
           char buffer[64];
           sprintf(buffer, "%.64s", cmd.c_str());
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
@@ -211,7 +214,9 @@ void launchRouter(string telecomNetwork, string machine, string serverAddress, i
           cerr << "fork() failed.\n";
           exit(1);
       case 0: /* Child process */
-          cmd = "xterm -hold -e ssh " + telecomNetwork + " ssh " + machine + " " + pathToRouter + " " + serverAddress + " " + to_string(nbClients);
+          string dir = executeScript("pwd");
+          dir.erase(remove(dir.begin(), dir.end(), '\n'), dir.end());
+          cmd = "xterm -e ssh " + machine + " cd " + dir + "/" + " && ./" + pathToRouter + " " + serverAddress + " " + to_string(nbClients);
           cout << "routerCmd: " << cmd << endl;
           char buffer[128];
           sprintf(buffer, "%.128s", cmd.c_str());
@@ -229,7 +234,9 @@ void launchClient(string telecomNetwork, string machine, int numClient) {
           cerr << "fork() failed.\n";
           exit(1);
       case 0: /* Child process */
-          cmd = "xterm -e ssh " + telecomNetwork + " ssh " + machine + " " + pathToClient + " " + pathToSubsceneInClient + "scene.xml";
+          string dir = executeScript("pwd");
+          dir.erase(remove(dir.begin(), dir.end(), '\n'), dir.end());
+          cmd = "xterm -e ssh " + telecomNetwork + " ssh " + machine + " cd " + dir + "/" + " && ./" + pathToClient + " " + pathToSubsceneInClient + "scene.xml";
           char buffer[256];
           sprintf(buffer, "%.256s", cmd.c_str());
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */

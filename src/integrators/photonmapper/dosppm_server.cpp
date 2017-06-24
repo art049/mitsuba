@@ -209,12 +209,12 @@ public:
         oss.str("");
 
         // Launching router and clients
-        string user = executeScript("whoami");
+        /*string user = executeScript("whoami");
         user.erase(remove(user.begin(), user.end(), '\n'), user.end());
         oss << "./" << launchRouterAndClient << " " << user << "@ssh.enst.fr" << " " << nb_Chunks;
         tmp = executeScript(oss.str());
         oss.str("");
-        cout << tmp << endl;
+        cout << tmp << endl;*/
 
         // Wait for router to send its address
         cout << "Waiting for router to send its address" << endl;
