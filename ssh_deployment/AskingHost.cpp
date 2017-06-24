@@ -4,28 +4,23 @@
 #include <iostream>
 #include <sys/wait.h>
 #include <signal.h>
+#include <sys/socket.h>
+#include "AskingHost.h"
 
 using namespace std;
 
-int main(int argc, char* argv[])
+void AskingHost::testAvailableComputer(const char * telNet, const char * c)
 {
-  if (argc != 3)
-  {
-    cerr << "Please indicate host@network and server, i.e computer to connect to" << endl;
-  }
-  const char * telecomNetwork = argv[1];
-  const char * server = argv[2];
+  const char * telecomNetwork = telNet;
+  const char * computer = c;
   int stdOutput[2];
   int errOutput[2];
-  char outputForstd[8];
-  char outputForerr[2048];
-
+  char outputForstd[4096];
   if (pipe(stdOutput) == -1 || pipe(errOutput) == -1)
   {
     cerr << "Error while openning pipe!" << endl;
     exit(1);
   }
-
   pid_t pid = fork();
 
   switch (pid) {
@@ -44,7 +39,7 @@ int main(int argc, char* argv[])
       close(errOutput[0]);
       close (stdOutput[1]);
       close (errOutput[1]);
-      execlp("ssh", "ssh", "-t", telecomNetwork, "ssh", "-o StrictHostKeyChecking=no", server, "hostname", (char*) NULL);
+      execlp("ssh", "ssh", telecomNetwork, "ssh", "-o StrictHostKeyChecking=no", computer, "hostname", (char*) NULL);
       cerr << "execl() failed!"; /* execl doesn't return unless there's an error */
       exit(1);
 
@@ -52,7 +47,6 @@ int main(int argc, char* argv[])
       /* Parent will read into both pipes, so we can close the reading part of both pipes. */
       close (stdOutput[1]);
       close (errOutput[1]);
-
       fd_set set;
       struct timeval timeout;
       /* Initialize the file descriptor set. */
@@ -69,17 +63,34 @@ int main(int argc, char* argv[])
       int ret = select(stdOutput[0] + 1, &set, NULL, NULL, &timeout);
       if (ret == 0)
       {
-          cerr << "Timeout Reached! Cannot connect to: " << server << endl;
-          kill(pid, SIGKILL);
+          cout << "Timeout Reached! Cannot connect to: " << computer << endl;
       }
-      else if (ret < 0)
-          cerr << "Error on asking Host." << endl;
+      else if (ret < 0) {
+          cout << "Error on asking Host." << endl;
+        }
       else
       {
         int nbytes = read(stdOutput[0], outputForstd, sizeof(outputForstd));
-        read(errOutput[0], outputForerr, sizeof(outputForerr));
         if (nbytes != 0)
-          cerr << "Machines ready to be used: " << server << endl;
+        {
+          close(stdOutput[0]);
+          close(errOutput[0]);
+          cout << "Machines ready to be used: " << computer << endl;
+          char cmd[64];
+          cmd[0] = 'e', cmd[1] = 'c', cmd[2] = 'h', cmd[3] = 'o', cmd[4] = ' ';
+          for (int i = 0 ; i < 7 ; i++) cmd[5+i] = computer[i];
+          cmd[12] = ' ', cmd[13] = '>', cmd[14] = '>', cmd[15] = ' ';
+          char buffer[32];
+          sprintf(buffer, "%.32s", fileName.c_str());
+          unsigned int i = 0;
+          for (; i < fileName.length() ; i++) {cout << buffer[i];cmd[16+i] = buffer[i];}
+          execlp("bash", "bash", "-c", cmd, (char *)NULL);
+          cerr << "execl() failed!"; /* execl doesn't return unless there's an error */
+          exit(1);
+        }
       }
+      close(stdOutput[0]);
+      close(errOutput[0]);
+      exit(1);
   }
 }

@@ -40,6 +40,7 @@
 
 using namespace std;
 
+
 static const string getAddressScript = "src/client_server/getAddress.sh";
 static const string launchRouterClientScript = "src/client_server/launchEverything.sh";
 

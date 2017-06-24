@@ -1,8 +1,20 @@
-CPPFLAGS = -Wall -std=c++11
+CIBLE = deployment
+SRCS =  Deployment.cpp AskingHost.cpp
 
-TARGETS = deployment askingHost
+CC = g++
+CPP = g++
 
-main: $(TARGETS)
+FLAGS = -std=c++11 -Wall -g -pthread -O3
 
+CFLAGS = $(FLAGS)
+CXXFLAGS = $(FLAGS)
+
+OBJS = $(SRCS:.cpp=.o)
+
+$(CIBLE): $(OBJS)
+	$(CPP) $(LDFLAGS) -o $(CIBLE) $(OBJS)
+	rm -f *~ $(OBJS)
 clean:
-	rm -rf $(TARGETS)
+	rm -f  *~  $(CIBLE) $(OBJS)
+
+deployment.o: Deployment.cpp AskingHost.h

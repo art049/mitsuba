@@ -33,14 +33,14 @@ int main (int argc, char * argv[]) {
     }else{
         ostringstream oss;
         oss << "tcp://" << argv[1] << ":" << serverPortNumber;
-        servAddr = oss.str(); 
+        servAddr = oss.str();
         nbChunks = atoi(argv[2]);
     }
 
     map < string, zmq::socket_t * > sockets;
     map < string, zmq::pollitem_t > items;
     socketPollingInfo infos = {sockets, items};
-    
+
     string tmp = executeScript("chmod +x " + scriptName + " && echo ok");
     string routerAdress = executeScript("./" + scriptName);
     cout << "routerAddress " << routerAdress << endl;
@@ -91,7 +91,7 @@ int main (int argc, char * argv[]) {
 
 
 void routeMessages(socketPollingInfo & infos){
-    
+
     map < string, zmq::pollitem_t > items = infos.items;
     map < string, zmq::socket_t * > sockets = infos.sockets;
     vector < zmq::pollitem_t > itemsValue;
@@ -101,7 +101,7 @@ void routeMessages(socketPollingInfo & infos){
         itemsKey.push_back( it->first );
         itemsValue.push_back( it->second );
     }
-    
+
     // Poll through the messages
     while (1) {
         zmq::message_t message;
@@ -119,7 +119,7 @@ void routeMessages(socketPollingInfo & infos){
                 std::cout << "Forwarding message to " << recipient << std::endl;
             }
         }
-        
+
     }
 }
 
@@ -139,7 +139,7 @@ string executeScript(string script){
 
 void clientFirstHandshake(socketPollingInfo & infos, zmq::socket_t * handshakeSocket, int nbChunks, zmq::context_t * context){
 
-    cout << "Waiting for all " << nbChunks << " clients to handshake" << endl; 
+    cout << "Waiting for all " << nbChunks << " clients to handshake" << endl;
 
     for(unsigned int i=1; i<=nbChunks; i++){
         zmq::message_t request;
@@ -161,7 +161,7 @@ void clientFirstHandshake(socketPollingInfo & infos, zmq::socket_t * handshakeSo
             // Bind associated socket
             zmq::socket_t * socket = new zmq::socket_t(*context, ZMQ_PAIR);
             string header("tcp://*: ");
-            oss << header << portNumberStr; 
+            oss << header << portNumberStr;
             socket->bind(oss.str().c_str());
             infos.sockets[idStr] = socket;
             zmq::pollitem_t item = {static_cast<void *>(*(infos.sockets[idStr])), 0, ZMQ_POLLIN, 0};
@@ -187,9 +187,9 @@ void sendGoSignal(map < string, zmq::socket_t * > sockets){
         int size = signalStr.size();
         zmq::message_t signal(size);
         memcpy(signal.data (), signalStr.c_str(), size);
-        sockets[it->first]->send(signal);      
+        sockets[it->first]->send(signal);
     }
-    cout << "Done\n" << endl; 
+    cout << "Done\n" << endl;
 }
 
 void receiveMessageRouter(zmq::socket_t * socket, zmq::message_t * message, std::string & recipient, std::string sender){
