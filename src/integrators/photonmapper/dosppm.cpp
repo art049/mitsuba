@@ -77,8 +77,7 @@ MTS_NAMESPACE_BEGIN
  *    models.
  * }
  */
-
- // TODO: move to header file
+//TODO: Move these structs into a header
  class iAABB {
  public:
    Point3i min;
@@ -99,7 +98,22 @@ MTS_NAMESPACE_BEGIN
       return o;
    }
  };
+ struct Portal {
+    Point3i min;
+    Point3i max;
+    int cut_axis;
+    int chunk1;
+    int chunk2;
 
+    friend std::ostream& operator << (std::ostream& o, const Portal& p) {
+ 		 o << "Axis " << p.cut_axis << endl
+           << "Coords " << p.min[0] << " " << p.min[1] << " " << p.min[2] << " ; "
+           << p.max[0] << " " << p.max[1] << " " << p.max[2] << endl
+           << "Chunks " << p.chunk1 << " | " << p.chunk2;
+
+ 		 return o;
+ 	}
+ };
 class DOSPPMIntegrator : public Integrator {
 public:
 	/// Represents one individual PPM gather point including relevant statistics
@@ -168,7 +182,7 @@ public:
 		return n_poly;
 	}
 
-	std::pair<iAABB, iAABB> split_in_chunks(std::vector<unsigned int> poly_count, iAABB * parent, Point3i n_cell){
+	std::pair<iAABB, iAABB> split_in_chunks(std::vector<unsigned int> poly_count, iAABB * parent, Point3i n_cell, int& split_axis){
 		Point3i min(parent->min), max(parent->max);
 		unsigned int parent_poly_count = sum_poly(poly_count, min, max, n_cell);
 		int min_axis = -1, min_i = -1;
@@ -191,6 +205,7 @@ public:
 		}
 		Point3i min_offset_vector(0,0,0);
 		min_offset_vector[min_axis] = 1;
+        split_axis = min_axis;
 		return std::make_pair(iAABB(min, Point3i(max - min_offset_vector * (max[min_axis] - min_i - 1))),
 		                 iAABB(Point3i(min + min_offset_vector * (min_i+1)), max));
 	}
@@ -251,7 +266,7 @@ public:
 
 
 		// BUILD CHUNKS
-		int split_depth = 3;
+		int split_depth = 2;
 		std::vector<iAABB> i_chunks;
 		std::pair<iAABB, iAABB> cur_chunks;
 
@@ -260,13 +275,50 @@ public:
 		for(int depth = 0; depth < split_depth; depth++){
 			std::vector<iAABB> tmp_chunks;
 			for(unsigned int i = 0; i < i_chunks.size(); i++){
-				cur_chunks = split_in_chunks(poly_count, &i_chunks[i], n_cell);
+                int split_axis;
+				cur_chunks = split_in_chunks(poly_count, &i_chunks[i], n_cell, split_axis);
 				tmp_chunks.push_back(cur_chunks.first);
 				tmp_chunks.push_back(cur_chunks.second);
 			}
 			i_chunks = tmp_chunks;
 		}
 		cout << endl;
+
+        // Add portals
+        std::vector<Portal> portals;
+        if (i_chunks.size() > 1) {
+            for (unsigned int i = 0; i < i_chunks.size(); i++) {
+                TAABB<Point3i> bb1 = TAABB<Point3i>(i_chunks.at(i).min, i_chunks.at(i).max);
+
+                for (unsigned int j = i + 1; j < i_chunks.size(); j++) {
+                    TAABB<Point3i> bb2 = TAABB<Point3i>(i_chunks.at(j).min, i_chunks.at(j).max);
+
+                    if (bb1.overlaps(bb2)) {
+                        TAABB<Point3i> overlap = bb1;
+                        overlap.clip(bb2);
+                        int cut_axis = overlap.getShortestAxis();
+                        Portal new_portal;
+
+                        new_portal.min = overlap.min;
+                        new_portal.max = overlap.max;
+                        new_portal.cut_axis = cut_axis;
+
+                        // Determine which chunk comes first on the cut axis
+                        if (i_chunks.at(i).min[cut_axis] <= i_chunks.at(j).min[cut_axis]) {
+                            new_portal.chunk1 = i;
+                            new_portal.chunk2 = j;
+                        } else {
+                            new_portal.chunk1 = j;
+                            new_portal.chunk2 = i;
+                        }
+
+                        portals.push_back(new_portal);
+                    }
+                }
+            }
+        }
+
+        // Convert chunks from iAABBs to AABBs
 		std::vector<AABB> chunks;
 		for(std::vector<iAABB>::iterator it = i_chunks.begin(); it != i_chunks.end(); it++){
 			chunks.push_back(it->toAABB(grid_size));
@@ -281,7 +333,7 @@ public:
 		cout << "SUBSCENE CREATION" << endl;
 		createSubSceneTemplate(scene);
 		for(unsigned int i = 0; i < chunks.size(); i++){
-			createSubScene(scene, meshes, chunks[i], i);
+			createSubScene(scene, meshes, chunks[i], i, portals);
 		}
 		cout << endl;
 	}
@@ -345,7 +397,7 @@ public:
 
 	}
 
-	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, AABB chunk, int chunkNb){
+	void createSubScene(const Scene *scene, const std::vector<TriMesh*> meshes, AABB chunk, int chunkNb, std::vector<Portal> portals){
 
 		// Create directory for this subscene
 		std::string folderPath("");
@@ -370,6 +422,26 @@ public:
 		scenePath << folderPath << "subscene" << chunkNb << ".xml";
 		std::ofstream subscene(scenePath.str().c_str());
 		subscene << sceneTemplate.rdbuf();
+
+        // Add portals to the subscene
+        for (std::vector<Portal>::iterator it = portals.begin(); it != portals.end(); it++) {
+            int destination = -1;
+
+            if (it->chunk1 == chunkNb)
+                destination = it->chunk2;
+            else if (it->chunk2 == chunkNb)
+                destination = it->chunk1;
+            else
+                continue;
+
+            subscene 	<< "\t<shape type=\"rectangle\" >\n"
+						<< "\t\t<transform name=\"toWorld\" >\n"
+						<< "\t\t\t<matrix value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\" />\n"
+						<< "\t\t</transform>\n"
+						<< "\t\t<ref id=\"DOSPPM_PortalTo_" << destination << "\" />\n"
+						<< "\t</shape>" << endl;
+            cout << "Portal added to subscene: " << *it << endl;
+        }
 
 		// find trimesh that are in the chunk, make an obj of the geometry actually in it and add it to the subscene
 
