@@ -43,7 +43,6 @@ using namespace std;
 
 void * receiveData(void * arg);
 void mainCycle(zmq::socket_t * socket, string id);
-void mainCycle2(zmq::socket_t * socket, string id);
 int getPortNumber(zmq::socket_t * socket, string id);
 string getRandomRecipient();
 int clientStartup(zmq::socket_t * communicationSocket, zmq::context_t * context, string & id);
@@ -355,7 +354,7 @@ public:
         zmq::context_t context (1);
         string id;
         zmq::socket_t communicationSocket (context, ZMQ_PAIR);
-        //clientStartup(&communicationSocket, &context, id);
+        clientStartup(&communicationSocket, &context, id);
 
         int it = 0;
 		while (m_running && (m_maxPasses == -1 || it < m_maxPasses)) {
