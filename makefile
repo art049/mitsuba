@@ -1,5 +1,5 @@
 COMMANDS = "source setpath.sh; bash"
-RUN_COMMANDS = "source setpath.sh; mitsuba scene/bathroom/scene.xml; bash"
+RUN_COMMANDS = "source setpath.sh; mitsuba scene/living_room_2/scene.xml; bash"
 
 .PHONY: build
 build: Makefile dockerbuild.log
@@ -8,7 +8,7 @@ build: Makefile dockerbuild.log
 	-w /mitsuba \
 	mitsuba \
 	sh -c 'cmake .' \
-	sh -c 'make -f Makefile -j8'
+	sh -c 'scons -j 8'
 
 .PHONY: webrun
 webrun: build

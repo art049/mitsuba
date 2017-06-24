@@ -473,7 +473,7 @@ public:
 		// Copy template into new scene file
 		std::ifstream sceneTemplate("/tmp/subscene/subSceneTemplate.xml");
 		std::ostringstream scenePath;
-		scenePath << folderPath << "subscene" << chunkNb << ".xml";
+		scenePath << folderPath << "scene" << ".xml";
 		std::ofstream subscene(scenePath.str().c_str());
 		subscene << sceneTemplate.rdbuf();
 
@@ -571,11 +571,6 @@ public:
 				subscene	  << "\t\t<ref id=\"" << bsdf->getID() << "\" />\n"
 						      << "\t</shape>" << endl;
 				cout << "Created " << objName << endl;
-
-                string servAdress = executeScript("./" + getAddressScript);
-                std::ofstream config ((folderPath + "config.txt").c_str(), std::ofstream::trunc);
-                config << servAdress << chunkName << endl;
-                config.close();
 			}
 		}
 
@@ -601,6 +596,11 @@ public:
 		subscene << "</scene>" << endl;
 		sceneTemplate.close();
 		subscene.close();
+
+		string servAdress = executeScript("./" + getAddressScript);
+        std::ofstream config ((folderPath + "config.txt").c_str());
+        config << servAdress << chunkName << endl;
+        config.close();
 	}
 
 	//https://stackoverflow.com/questions/8593608/how-can-i-copy-a-directory-using-boost-filesystem

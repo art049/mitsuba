@@ -20,6 +20,7 @@
 #include <mitsuba/core/bitmap.h>
 #include <mitsuba/render/gatherproc.h>
 #include <mitsuba/render/renderqueue.h>
+#include <mitsuba/core/mstream.h>
 
 #include <iostream>
 #include <fstream>
@@ -92,21 +93,12 @@ MTS_NAMESPACE_BEGIN
  *    models.
  * }
  */
-//TODO: Move this struc into a header
- struct iAABB {
- 	Point3i min;
- 	Point3i max;
- 	iAABB(Point3i min=Point3i(), Point3i max=Point3i()): min(min), max(max){}
- 	friend std::ostream& operator << ( std::ostream& o, const iAABB& e ) {
- 		 o << "min: " << e.min[0] << " " << e.min[1] << " " <<e.min[2]
-		   <<", max: " << e.max[0] << " " << e.max[1] << " " <<e.max[2];
- 		 return o;
- 	}
- };
+
 class DOSPPMClientIntegrator : public Integrator {
 public:
 	/// Represents one individual PPM gather point including relevant statistics
-	struct GatherPoint {
+	class GatherPoint {
+	public:
 		Intersection its;
 		Float radius;
 		Spectrum weight;
@@ -118,6 +110,31 @@ public:
         string dest;
 
 		inline GatherPoint() : weight(0.0f), flux(0.0f), emission(0.0f), N(0.0f) { }
+
+		GatherPoint(Stream *stream){
+			dest 		= stream->readString();
+			// read intersection
+			radius 		= stream->readFloat();
+			weight 		= Spectrum(stream);
+			flux 		= Spectrum(stream);
+			emission 	= Spectrum(stream);
+			N 			= stream->readFloat();
+			depth 		= stream->readInt();
+			pos 		= TPoint2<int>(stream);
+		}
+
+		void serialize(Stream *stream) const {
+			stream->writeString(dest);
+			// send intersection
+			stream->writeFloat(radius);
+			weight.serialize(stream);
+			flux.serialize(stream);
+			emission.serialize(stream);
+			stream->writeFloat(N);
+			stream->writeInt(depth);
+			pos.serialize(stream);
+		}
+
 	};
 
 	DOSPPMClientIntegrator(const Properties &props) : Integrator(props) {
@@ -472,17 +489,16 @@ public:
 			}
 		}
 
+		ref<Stream> stream;
+		stream = new MemoryStream();
         for (int i=0; i<(int) m_gatherBlocks.size(); ++i) {
 			std::vector<GatherPoint> &gatherPoints = m_gatherBlocks[i];
             for(int j=0; j<(int)gatherPoints.size(); j++){
                 GatherPoint gp = gatherPoints[j];
                 if(gp.depth != -1){
                     //cout << "GP: " << gp.dest << endl;
-                    /*stringstream ofs;
-                    boost::archive::text_oarchive oa(ofs);
-                    // write class instance to archive
-                    oa << gp;
-                    sendMessage(socket, oa.str(), gp.dest);*/
+                    gp.serialize(stream);
+                    //sendMessage(socket, stream.toString(), gp.dest);
                 }
             }
         }
