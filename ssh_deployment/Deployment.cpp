@@ -8,6 +8,8 @@
 #include <fstream>
 #include <algorithm>
 #include "AskingHost.h"
+#include <cstdio>
+#include <sstream>
 
 void startup(const char *);
 void rmAvailableFile(string);
@@ -19,15 +21,14 @@ void rmPreviousSubscene(string, string, int);
 string executeScript(string script);
 
 /* Global variables */
-string FILENAME = "AvailableComputers";
+string FILENAME = "ssh_deployment/AvailableComputers";
 bool DEBUG = true;
-string scriptName = "getAddress.sh";
-string pathToRouter = "/cal/homes/vbisogno/mitsuba-dosppm/client_server_test/router";
-string pathToClient = "/cal/homes/vbisogno/mitsuba-dosppm/client_server_test/client";
+string scriptName = "src/client_server/getAddress.sh";
+string pathToRouter = "src/client_server/router";
+string pathToClient = "binaries/mitsuba";
 string pathToSubsceneInClient = "/tmp/subscene/";
-string pathToSubsceneInServer = "~/mitsuba-dosppm/subscene/";
-string destAddressScript = "/cal/homes/vbisogno/";
-string name = "vbisogno@";
+string pathToSubsceneInServer = "/tmp/subscene/";
+string destAddressScript = "src/client_server/";
 
 using namespace std;
 
@@ -53,15 +54,18 @@ int main(int argc, char * argv[])
   startup(telecomNetwork);
   printf("All child processes finished.\n");
   /* Copying of the script getAdress.sh for the router to work properly. */
-  copyScriptAddress(telecomNetwork);
+  //copyScriptAddress(telecomNetwork);
   /* All available computers are now in the AvailableComputers file.
   ** We can now launch router.
   */
-  char buffer[32];
-  sprintf(buffer, "%.32s", FILENAME.c_str());
+  char buffer[64];
+  sprintf(buffer, "%.64s", FILENAME.c_str());
+  cout << "Buff: " << buffer << endl;
   ifstream f(buffer);
   string machine;
   f >> machine;
+  //getline(f,machine);
+
   cout << "Launching router on computer: " << machine << endl;
   /* Launch router on 'machine'. We give serverAddress and nbClients as requested by the router process. */
   launchRouter(telecomNetwork, machine, serverAddress, nbClients);
@@ -88,8 +92,8 @@ void rmAvailableFile(string file) {
       exit(1);
     case 0: //Child process
       cout << "[BEGIN REMOVING] file: " + file << endl;
-      char buffer[32];
-      sprintf(buffer, "%.32s", file.c_str());
+      char buffer[64];
+      sprintf(buffer, "%.64s", file.c_str());
       execlp("rm", "rm", "-f", buffer, (char *)NULL);
       cerr << "Exec failed!" << endl;
       exit(1);
@@ -107,7 +111,7 @@ void rmPreviousSubscene(string telecomNetwork, string machine, int numClient) {
       cerr << "Uh-Oh! fork() failed.\n";
       exit(1);
     case 0: //Child process
-      cmd = "ssh " + telecomNetwork + " ssh " + machine + " rm -f -r " + pathToSubsceneInClient;
+      cmd = "ssh " + telecomNetwork + " ssh " + machine + " rm -rf " + pathToSubsceneInClient;
       char buffer[256];
       sprintf(buffer, "%.256s", cmd.c_str());
       execlp("bash", "bash", "-c", buffer, (char *)NULL);
@@ -178,13 +182,16 @@ void copyScriptAddress(string telecomNetwork) {
 void copySubscene(string telecomNetwork, string machine, int numClient) {
   pid_t pid = fork();
   string cmd = "";
+  string userName = "";
   switch (pid) {
       case -1: /* Error */
           cerr << "fork() failed.\n";
           exit(1);
       case 0: /* Child process */
+          userName = telecomNetwork.substr(0, telecomNetwork.find("@"));
           cmd = string("scp -r -o ProxyCommand=\"ssh ") + telecomNetwork + " nc %h %p\" -o StrictHostKeyChecking=no " + pathToSubsceneInServer + "sub" +
-          to_string(numClient) + " " + name + machine + ":/tmp/subscene/";
+          to_string(numClient) + " " + userName + "@" + machine + ":/tmp/subscene/";
+          cout << "Mycmd: " << cmd << endl;
           char buffer[256];
           sprintf(buffer, "%.256s", cmd.c_str());
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
@@ -204,7 +211,8 @@ void launchRouter(string telecomNetwork, string machine, string serverAddress, i
           cerr << "fork() failed.\n";
           exit(1);
       case 0: /* Child process */
-          cmd = "xterm -e ssh " + telecomNetwork + " ssh " + machine + " " + pathToRouter + " " + serverAddress + " " + to_string(nbClients);
+          cmd = "xterm -hold -e ssh " + telecomNetwork + " ssh " + machine + " " + pathToRouter + " " + serverAddress + " " + to_string(nbClients);
+          cout << "routerCmd: " << cmd << endl;
           char buffer[128];
           sprintf(buffer, "%.128s", cmd.c_str());
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */

@@ -42,7 +42,7 @@ using namespace std;
 
 
 static const string getAddressScript = "src/client_server/getAddress.sh";
-static const string launchRouterClientScript = "src/client_server/launchEverything.sh";
+static const string launchRouterAndClient = "ssh_deployment/deployment";
 
 MTS_NAMESPACE_BEGIN
 
@@ -192,10 +192,9 @@ public:
     	int major, minor, patch;
         zmq_version (&major, &minor, &patch); printf ("Current ØMQ version is %d.%d.%d\n", major, minor, patch);
 
-    	string 	tmp = executeScript("pwd");
+    	string tmp = executeScript("pwd");
     	cout << "PWD: " << tmp << endl;
     	tmp = executeScript("chmod +x " + getAddressScript + " && echo ok");
-    	tmp = executeScript("chmod +x " + launchRouterClientScript + " && echo ok");
         string servAdress = executeScript("./" + getAddressScript);
         servAdress.erase(remove(servAdress.begin(), servAdress.end(), '\n'), servAdress.end());
         cout << "servAdress " << servAdress << endl;
@@ -210,10 +209,12 @@ public:
         oss.str("");
 
         // Launching router and clients
-        /*oss << "./" << launchRouterClientScript << " " << servAdress << " " << nb_Chunks;
+        string user = executeScript("whoami");
+        user.erase(remove(user.begin(), user.end(), '\n'), user.end());
+        oss << "./" << launchRouterAndClient << " " << user << "@ssh.enst.fr" << " " << nb_Chunks;
         tmp = executeScript(oss.str());
         oss.str("");
-        cout << tmp << endl;*/
+        cout << tmp << endl;
 
         // Wait for router to send its address
         cout << "Waiting for router to send its address" << endl;

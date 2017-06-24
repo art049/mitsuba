@@ -23,6 +23,11 @@ void AskingHost::testAvailableComputer(const char * telNet, const char * c)
   }
   pid_t pid = fork();
 
+  char buffer[64];
+  sprintf(buffer, "%.64s", fileName.c_str());
+  execlp("pwd", buffer, (char *)NULL);
+  cout << "Pwd: " << buffer << endl;
+
   switch (pid) {
     case -1: //Fork error
       cerr << "Error in fork creation!" << endl;
@@ -80,8 +85,8 @@ void AskingHost::testAvailableComputer(const char * telNet, const char * c)
           cmd[0] = 'e', cmd[1] = 'c', cmd[2] = 'h', cmd[3] = 'o', cmd[4] = ' ';
           for (int i = 0 ; i < 7 ; i++) cmd[5+i] = computer[i];
           cmd[12] = ' ', cmd[13] = '>', cmd[14] = '>', cmd[15] = ' ';
-          char buffer[32];
-          sprintf(buffer, "%.32s", fileName.c_str());
+          char buffer[64];
+          sprintf(buffer, "%.64s", fileName.c_str());
           unsigned int i = 0;
           for (; i < fileName.length() ; i++) {cout << buffer[i];cmd[16+i] = buffer[i];}
           execlp("bash", "bash", "-c", cmd, (char *)NULL);
