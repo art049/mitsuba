@@ -21,10 +21,12 @@
 #include <mitsuba/render/gatherproc.h>
 #include <mitsuba/render/renderqueue.h>
 #include <mitsuba/core/mstream.h>
+#include <mitsuba/core/cobject.h>
 
 #include <iostream>
 #include <fstream>
 #include <string>
+
 
 #include <utility>
 
@@ -95,6 +97,7 @@ MTS_NAMESPACE_BEGIN
 
 class DOSPPMClientIntegrator : public Integrator {
 public:
+
 	/// Represents one individual PPM gather point including relevant statistics
 	class GatherPoint {
 	public:
@@ -108,30 +111,33 @@ public:
 		Point2i pos;
         string dest;
 
-		inline GatherPoint() : weight(0.0f), flux(0.0f), emission(0.0f), N(0.0f) { }
+		GatherPoint() : weight(0.0f), flux(0.0f), emission(0.0f), N(0.0f) { }
 
-		GatherPoint(Stream *stream){
+		GatherPoint(Stream *stream, InstanceManager *manager) {
 			dest 		= stream->readString();
-			// read intersection
+			/*its 		= Intersection(stream, manager);
 			radius 		= stream->readFloat();
 			weight 		= Spectrum(stream);
 			flux 		= Spectrum(stream);
 			emission 	= Spectrum(stream);
 			N 			= stream->readFloat();
 			depth 		= stream->readInt();
-			pos 		= TPoint2<int>(stream);
+			pos 		= TPoint2<int>(stream);*/
 		}
 
-		void serialize(Stream *stream) const {
+		void serialize(Stream * stream, InstanceManager *manager) const {
+			/*stream->writeString(m_name);
+			manager->serialize(stream, m_bsdf.get());*/
+
 			stream->writeString(dest);
-			// send intersection
+			/*its.serialize(stream, manager);
 			stream->writeFloat(radius);
 			weight.serialize(stream);
 			flux.serialize(stream);
 			emission.serialize(stream);
 			stream->writeFloat(N);
 			stream->writeInt(depth);
-			pos.serialize(stream);
+			pos.serialize(stream);*/
 		}
 
 	};
@@ -354,7 +360,7 @@ public:
         zmq::context_t context (1);
         string id;
         zmq::socket_t communicationSocket (context, ZMQ_PAIR);
-        clientStartup(&communicationSocket, &context, id);
+        //clientStartup(&communicationSocket, &context, id);
 
         int it = 0;
 		while (m_running && (m_maxPasses == -1 || it < m_maxPasses)) {
@@ -488,15 +494,31 @@ public:
 			}
 		}
 
-		ref<Stream> stream;
+		InstanceManager * manager = new InstanceManager;
+		ref<MemoryStream> stream;
 		stream = new MemoryStream();
+		cout << stream->toString() << endl;
         for (int i=0; i<(int) m_gatherBlocks.size(); ++i) {
 			std::vector<GatherPoint> &gatherPoints = m_gatherBlocks[i];
             for(int j=0; j<(int)gatherPoints.size(); j++){
                 GatherPoint gp = gatherPoints[j];
                 if(gp.depth != -1){
-                    //cout << "GP: " << gp.dest << endl;
-                    gp.serialize(stream);
+                    /*cout << "GP: " << gp.dest << endl;
+                    gp.serialize(stream, manager);
+                    GatherPoint gp2(stream, manager);
+                    cout << "GP2: " << gp2.dest << endl;*/
+                    if(stream->canWrite()){
+                    	cout << "Writing" << endl;
+                    	stream->writeInt(5);
+                    	cout << stream->toString() << endl;
+                    }
+                    if(stream->canRead()){
+                    	cout << "Reading" << endl;
+                    	int a = stream->readInt();
+                    	cout << stream->toString() << endl;
+                    	cout << "a: " << a << endl;
+                    }
+
                     //sendMessage(socket, stream.toString(), gp.dest);
                 }
             }

@@ -28,149 +28,6 @@
 
 MTS_NAMESPACE_BEGIN
 
-/** \brief Container for all information related to
- * a surface intersection
- * \ingroup librender
- * \ingroup libpython
- */
-struct MTS_EXPORT_RENDER Intersection {
-public:
-	inline Intersection() :
-		shape(NULL), t(std::numeric_limits<Float>::infinity()) { }
-
-	/// Convert a local shading-space vector into world space
-	inline Vector toWorld(const Vector &v) const {
-		return shFrame.toWorld(v);
-	}
-
-	/// Convert a world-space vector into local shading coordinates
-	inline Vector toLocal(const Vector &v) const {
-		return shFrame.toLocal(v);
-	}
-
-	/// Is the current intersection valid?
-	inline bool isValid() const {
-		return t != std::numeric_limits<Float>::infinity();
-	}
-
-	/// Is the intersected shape also a emitter?
-	inline bool isEmitter() const;
-
-	/// Is the intersected shape also a sensor?
-	inline bool isSensor() const;
-
-	/// Does the intersected shape have a subsurface integrator?
-	inline bool hasSubsurface() const;
-
-	/// Does the surface mark a transition between two media?
-	inline bool isMediumTransition() const;
-
-	/**
-	 * \brief Determine the target medium
-	 *
-	 * When \c isMediumTransition() = \c true, determine the medium that
-	 * contains the ray (\c this->p, \c d)
-	 */
-	inline const Medium *getTargetMedium(const Vector &d) const;
-
-	/**
-	 * \brief Determine the target medium based on the cosine
-	 * of the angle between the geometric normal and a direction
-	 *
-	 * Returns the exterior medium when \c cosTheta > 0 and
-	 * the interior medium when \c cosTheta <= 0.
-	 */
-	inline const Medium *getTargetMedium(Float cosTheta) const;
-
-	/**
-	 * \brief Returns the BSDF of the intersected shape.
-	 *
-	 * The parameter ray must match the one used to create the intersection
-	 * record. This function computes texture coordinate partials if this is
-	 * required by the BSDF (e.g. for texture filtering).
-	 *
-	 * \remark This function should only be called if there is a valid
-	 * intersection!
-	 */
-	inline const BSDF *getBSDF(const RayDifferential &ray);
-
-	/// Returns the BSDF of the intersected shape
-	inline const BSDF *getBSDF() const;
-
-	/**
-	 * \brief Returns radiance emitted into direction d.
-	 *
-	 * \remark This function should only be called if the
-	 * intersected shape is actually an emitter.
-	 */
-	inline Spectrum Le(const Vector &d) const;
-
-	/**
-	 * \brief Returns radiance from a subsurface integrator
-	 * emitted into direction d.
-	 *
-	 * \remark Should only be called if the intersected
-	 * shape is actually a subsurface integrator.
-	 */
-	inline Spectrum LoSub(const Scene *scene, Sampler *sampler,
-			const Vector &d, int depth=0) const;
-
-	/// Computes texture coordinate partials
-	void computePartials(const RayDifferential &ray);
-
-	/// Move the intersection forward or backward through time
-	inline void adjustTime(Float time);
-
-	/// Calls the suitable implementation of \ref Shape::getNormalDerivative()
-	inline void getNormalDerivative(Vector &dndu, Vector &dndv,
-		bool shadingFrame = true) const;
-
-	/// Return a string representation
-	std::string toString() const;
-public:
-	/// Pointer to the associated shape
-	const Shape *shape;
-
-	/// Distance traveled along the ray
-	Float t;
-
-	/* Intersection point in 3D coordinates */
-	Point p;
-
-	/// Geometry frame
-	Frame geoFrame;
-
-	/// Shading frame
-	Frame shFrame;
-
-	/// UV surface coordinates
-	Point2 uv;
-
-	/// Position partials wrt. the UV parameterization
-	Vector dpdu, dpdv;
-
-	/// UV partials wrt. changes in screen-space
-	Float dudx, dudy, dvdx, dvdy;
-
-	/// Time value associated with the intersection
-	Float time;
-
-	/// Interpolated vertex color
-	Spectrum color;
-
-	/// Incident direction in the local shading frame
-	Vector wi;
-
-	/// Have texture coordinate partials been computed
-	bool hasUVPartials : 1;
-
-	/// Primitive index, e.g. the triangle ID (if applicable)
-	uint32_t primIndex : 31;
-
-	/// Stores a pointer to the parent instance, if applicable
-	const Shape *instance;
-};
-
 /** \brief Abstract base class of all shapes
  * \ingroup librender
  * \ingroup libpython
@@ -527,8 +384,192 @@ protected:
 	ref<Medium> m_exteriorMedium;
 };
 
+
+/** \brief Container for all information related to
+ * a surface intersection
+ * \ingroup librender
+ * \ingroup libpython
+ */
+struct MTS_EXPORT_RENDER Intersection {
+public:
+	inline Intersection() :
+		shape(NULL), t(std::numeric_limits<Float>::infinity()) { }
+
+	inline Intersection(Stream * stream, InstanceManager *manager) :
+		shape(NULL), t(std::numeric_limits<Float>::infinity()) {
+		shape 			= (const Shape *)manager->getInstance(stream);
+		t 				= stream->readFloat();
+		p 				= Point(stream);
+		geoFrame 		= Frame(stream);
+		shFrame 		= Frame(stream);
+		uv 				= Point2(stream);
+		dpdu 			= Vector(stream);
+		dpdv			= Vector(stream);
+		dudx 			= stream->readFloat();
+ 		dudy 			= stream->readFloat();
+ 		dvdx 			= stream->readFloat();
+ 		dvdy 			= stream->readFloat();
+ 		time 			= stream->readFloat();
+ 		color 			= Spectrum(stream);
+ 		wi 				= Vector(stream);
+ 		hasUVPartials 	= stream->readBool();
+ 		primIndex 		= stream->readUInt();
+	}
+
+	/// Convert a local shading-space vector into world space
+	inline Vector toWorld(const Vector &v) const {
+		return shFrame.toWorld(v);
+	}
+
+	/// Convert a world-space vector into local shading coordinates
+	inline Vector toLocal(const Vector &v) const {
+		return shFrame.toLocal(v);
+	}
+
+	/// Is the current intersection valid?
+	inline bool isValid() const {
+		return t != std::numeric_limits<Float>::infinity();
+	}
+
+	/// Is the intersected shape also a emitter?
+	inline bool isEmitter() const;
+
+	/// Is the intersected shape also a sensor?
+	inline bool isSensor() const;
+
+	/// Does the intersected shape have a subsurface integrator?
+	inline bool hasSubsurface() const;
+
+	/// Does the surface mark a transition between two media?
+	inline bool isMediumTransition() const;
+
+	/**
+	 * \brief Determine the target medium
+	 *
+	 * When \c isMediumTransition() = \c true, determine the medium that
+	 * contains the ray (\c this->p, \c d)
+	 */
+	inline const Medium *getTargetMedium(const Vector &d) const;
+
+	/**
+	 * \brief Determine the target medium based on the cosine
+	 * of the angle between the geometric normal and a direction
+	 *
+	 * Returns the exterior medium when \c cosTheta > 0 and
+	 * the interior medium when \c cosTheta <= 0.
+	 */
+	inline const Medium *getTargetMedium(Float cosTheta) const;
+
+	/**
+	 * \brief Returns the BSDF of the intersected shape.
+	 *
+	 * The parameter ray must match the one used to create the intersection
+	 * record. This function computes texture coordinate partials if this is
+	 * required by the BSDF (e.g. for texture filtering).
+	 *
+	 * \remark This function should only be called if there is a valid
+	 * intersection!
+	 */
+	inline const BSDF *getBSDF(const RayDifferential &ray);
+
+	/// Returns the BSDF of the intersected shape
+	inline const BSDF *getBSDF() const;
+
+	/**
+	 * \brief Returns radiance emitted into direction d.
+	 *
+	 * \remark This function should only be called if the
+	 * intersected shape is actually an emitter.
+	 */
+	inline Spectrum Le(const Vector &d) const;
+
+	/**
+	 * \brief Returns radiance from a subsurface integrator
+	 * emitted into direction d.
+	 *
+	 * \remark Should only be called if the intersected
+	 * shape is actually a subsurface integrator.
+	 */
+	inline Spectrum LoSub(const Scene *scene, Sampler *sampler,
+			const Vector &d, int depth=0) const;
+
+	/// Computes texture coordinate partials
+	void computePartials(const RayDifferential &ray);
+
+	/// Move the intersection forward or backward through time
+	inline void adjustTime(Float time);
+
+	/// Calls the suitable implementation of \ref Shape::getNormalDerivative()
+	inline void getNormalDerivative(Vector &dndu, Vector &dndv,
+		bool shadingFrame = true) const;
+
+	/// Return a string representation
+	std::string toString() const;
+
+	inline void serialize(Stream *stream, InstanceManager *manager) const {
+		shape->serialize(stream, manager);
+		stream->writeFloat(t);
+		p.serialize(stream);
+		geoFrame.serialize(stream);
+		shFrame.serialize(stream);
+		uv.serialize(stream);
+		dpdu.serialize(stream);
+		dpdv.serialize(stream);
+		stream->writeFloat(dudx);
+ 		stream->writeFloat(dudy);
+ 		stream->writeFloat(dvdx);
+ 		stream->writeFloat(dvdy);
+ 		stream->writeFloat(time);
+ 		color.serialize(stream);
+ 		wi.serialize(stream);
+ 		stream->writeBool(hasUVPartials);
+ 		stream->writeUInt(primIndex);
+	}
+public:
+	/// Pointer to the associated shape
+	const Shape *shape;
+
+	/// Distance traveled along the ray
+	Float t;
+
+	/* Intersection point in 3D coordinates */
+	Point p;
+
+	/// Geometry frame
+	Frame geoFrame;
+
+	/// Shading frame
+	Frame shFrame;
+
+	/// UV surface coordinates
+	Point2 uv;
+
+	/// Position partials wrt. the UV parameterization
+	Vector dpdu, dpdv;
+
+	/// UV partials wrt. changes in screen-space
+	Float dudx, dudy, dvdx, dvdy;
+
+	/// Time value associated with the intersection
+	Float time;
+
+	/// Interpolated vertex color
+	Spectrum color;
+
+	/// Incident direction in the local shading frame
+	Vector wi;
+
+	/// Have texture coordinate partials been computed
+	bool hasUVPartials : 1;
+
+	/// Primitive index, e.g. the triangle ID (if applicable)
+	uint32_t primIndex : 31;
+
+	/// Stores a pointer to the parent instance, if applicable
+	const Shape *instance;
+};
+
+
 MTS_NAMESPACE_END
 
 #endif /* __MITSUBA_RENDER_SHAPE_H_ */
-
-
