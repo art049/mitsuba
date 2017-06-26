@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <sys/socket.h>
 #include "AskingHost.h"
+#include <sstream>
 
 using namespace std;
 
@@ -79,12 +80,9 @@ void AskingHost::testAvailableComputer(const char * telNet, const char * c)
           close(stdOutput[0]);
           close(errOutput[0]);
           cout << "Machines ready to be used: " << computer << endl;
-          char cmd[64];
-          cmd[0] = 'e', cmd[1] = 'c', cmd[2] = 'h', cmd[3] = 'o', cmd[4] = ' ';
-          for (int i = 0 ; i < 7 ; i++) cmd[5+i] = computer[i];
-          cmd[12] = ' ', cmd[13] = '>', cmd[14] = '>', cmd[15] = ' ';
-          unsigned int i = 0;
-          for (; i < fileName.length() ; i++) {cout << fileName[i];cmd[16+i] = fileName[i];}
+          ostringstream oss;
+          oss << "echo " << computer << " >> " << fileName;
+          const char * cmd = oss.str().c_str();
           execlp("bash", "bash", "-c", cmd, (char *)NULL);
           cerr << "execl() failed!"; /* execl doesn't return unless there's an error */
           exit(1);

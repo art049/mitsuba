@@ -214,7 +214,7 @@ public:
         oss << "./" << launchRouterAndClient << " " << user << "@ssh.enst.fr" << " " << nb_Chunks;
         tmp = executeScript(oss.str());
         oss.str("");
-        cout << tmp << endl;*/
+        cout << "Retour: " << tmp << endl;*/
 
         // Wait for router to send its address
         cout << "Waiting for router to send its address" << endl;

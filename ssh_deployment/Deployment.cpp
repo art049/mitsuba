@@ -60,8 +60,8 @@ int main(int argc, char * argv[])
   /* All available computers are now in the AvailableComputers file.
   ** We can now launch router.
   */
-  char buffer[64];
-  sprintf(buffer, "%.64s", FILENAME.c_str());
+  char buffer[256];
+  sprintf(buffer, "%.256s", FILENAME.c_str());
   ifstream f(buffer);
   string machine;
   f >> machine;
@@ -171,9 +171,9 @@ void copyScriptAddress(string telecomNetwork) {
           exit(1);
       case 0: /* Child process */
           userName = telecomNetwork.substr(0, telecomNetwork.find("@"));
-          cmd = string("scp ") + "./" + scriptName + " " + telecomNetwork + ":" + destAddressScript + userName + "/";
-          char buffer[64];
-          sprintf(buffer, "%.64s", cmd.c_str());
+          cmd = string("scp ") + scriptPath + " " + telecomNetwork + ":" + destAddressScript + userName + "/";
+          char buffer[256];
+          sprintf(buffer, "%.256s", cmd.c_str());
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
           cerr << "Copy of the getAdress script file failed. Exiting ..." << endl;
           exit(1);
@@ -216,10 +216,10 @@ void launchRouter(string telecomNetwork, string machine, string serverAddress, i
       case 0: /* Child process */
           string dir = executeScript("pwd");
           dir.erase(remove(dir.begin(), dir.end(), '\n'), dir.end());
-          cmd = "xterm -e ssh " + machine + " cd " + dir + "/" + " && ./" + pathToRouter + " " + serverAddress + " " + to_string(nbClients);
+          cmd = "xterm -hold -e ssh " + machine + " cd " + dir + "/" + " && ./" + pathToRouter + " " + serverAddress + " " + to_string(nbClients);
           cout << "routerCmd: " << cmd << endl;
-          char buffer[128];
-          sprintf(buffer, "%.128s", cmd.c_str());
+          char buffer[256];
+          sprintf(buffer, "%.256s", cmd.c_str());
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
           cerr << "Launching router failed. Exiting ..." << endl;
           exit(1);
@@ -236,7 +236,8 @@ void launchClient(string telecomNetwork, string machine, int numClient) {
       case 0: /* Child process */
           string dir = executeScript("pwd");
           dir.erase(remove(dir.begin(), dir.end(), '\n'), dir.end());
-          cmd = "xterm -e ssh " + telecomNetwork + " ssh " + machine + " cd " + dir + "/" + " && ./" + pathToClient + " " + pathToSubsceneInClient + "scene.xml";
+          cmd = "xterm -hold -e ssh " + telecomNetwork + " ssh " + machine + " cd " + dir + "/" + " && ./" + pathToClient + " " + pathToSubsceneInClient + "scene.xml";
+          cout << "Client cmd: " << cmd << endl;
           char buffer[256];
           sprintf(buffer, "%.256s", cmd.c_str());
           execlp("bash", "bash", "-c", buffer, (char*)NULL);  /* Execute the program ssh telNet@ssh.enst.fr ssh machine pathToRouter servAddr nbClients */
